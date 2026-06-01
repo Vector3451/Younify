@@ -1,0 +1,29 @@
+# =============================================================================
+# docker-compose.worker.yml
+# =============================================================================
+# Run this on WORKER MACHINES only (no Redis, no API here).
+# This machine's containers connect to the head node's Redis.
+#
+# Usage:
+#   1. Set HEAD_NODE_IP to the IP of the machine running Redis.
+#   2. docker compose -f docker-compose.worker.yml up -d --scale worker=N
+#
+# =============================================================================
+
+x-worker-common: &worker-common
+  build:
+    context: .
+    dockerfile: worker/Dockerfile
+  restart: unless-stopped
+  environment: &worker-env
+    REDIS_HOST: "${HEAD_NODE_IP:-192.168.1.100}"
+    REDIS_PORT: "${REDIS_PORT:-6379}"
+    REDIS_DB: 0
+    OLLAMA_BASE_URL: "${OLLAMA_BASE_URL:-http://host.docker.internal:11434}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+services:
+  worker:
+    <<: *worker-common
+    # Scale with: docker compose -f docker-compose.worker.yml up -d --scale worker=3
