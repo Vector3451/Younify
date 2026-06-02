@@ -5,8 +5,8 @@ Receives inference requests, enqueues them to Redis,
 serves a web dashboard, and lets workers process jobs.
 
 Usage:
-    uvicorn api_gateway.main:app --host 0.0.0.0 --port 8000
-    Then open http://localhost:8000 in your browser.
+    uvicorn api_gateway.main:app --host 0.0.0.0 --port 8090
+    Then open http://localhost:8090 in your browser.
 """
 
 import json
@@ -239,4 +239,4 @@ async def get_status(job_id: str):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("api_gateway.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("api_gateway.main:app", host="0.0.0.0", port=8090, reload=True)

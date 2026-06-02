@@ -15,7 +15,7 @@ set -euo pipefail
 
 # ── Configuration ────────────────────────────────────────────────────────────
 REDIS_PORT="${REDIS_PORT:-6379}"
-API_PORT="${API_PORT:-8000}"
+API_PORT="${API_PORT:-8090}"
 
 # Auto-detect IP of the first non-loopback interface
 MY_IP=$(hostname -I | awk '{print $1}')

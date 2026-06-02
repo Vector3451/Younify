@@ -71,7 +71,7 @@ ollama pull tinyllama
 
 ### 4. Start the API Gateway
 ```bash
-.venv/bin/uvicorn api_gateway.main:app --host 0.0.0.0 --port 8000
+.venv/bin/uvicorn api_gateway.main:app --host 0.0.0.0 --port 8090
 ```
 
 ### 5. Start one or more workers
@@ -82,7 +82,7 @@ ollama pull tinyllama
 
 ### 6. Open the dashboard
 ```
-http://localhost:8000
+http://localhost:8090
 ```
 
 ---
@@ -97,7 +97,7 @@ The system is designed from the ground up for multi-machine distribution. Every 
 valkey-server --port 6379 --bind 0.0.0.0 --daemonize yes
 
 # Start the API Gateway
-.venv/bin/uvicorn api_gateway.main:app --host 0.0.0.0 --port 8000
+.venv/bin/uvicorn api_gateway.main:app --host 0.0.0.0 --port 8090
 ```
 
 **Worker Nodes (Machine B, C, D...):**
@@ -120,7 +120,7 @@ Workers connect to the shared Redis queue, pick up jobs, run inference on their 
 
 ## 💻 Web Dashboard
 
-The dashboard is served at `http://localhost:8000` and includes:
+The dashboard is served at `http://localhost:8090` and includes:
 
 | Panel | Description |
 |---|---|
@@ -223,6 +223,6 @@ HEAD_NODE_IP=192.168.1.100 docker compose -f docker-compose.worker.yml up -d --s
 
 | Port | Service |
 |---|---|
-| `8000` | Web Dashboard + API Gateway |
+|| `8090` | Web Dashboard + API Gateway |
 | `6379` | Redis / Valkey Message Broker |
 | `11434` | Ollama (local model server) |
