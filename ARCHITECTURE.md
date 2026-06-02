@@ -1,180 +1,156 @@
-# 🏛️ Architecture — Younify Distributed AI Inference System
+# Architecture — Younify Distributed AI Inference System
 
-## 🎯 Goal
+## Goal
 
-Build a **highly available, horizontally scalable** distributed system that accepts AI inference requests via a central API, fans them out through a persistent message queue to a pool of heterogeneous worker nodes, and returns results asynchronously — supporting local and cloud-based model providers simultaneously.
+Build a distributed inference cluster where multiple machines pool their GPU/CPU compute to run one model collaboratively, without a job dispatch queue — workers auto-connect and contribute resources directly via llama.cpp RPC.
 
 ---
 
-## 🗺️ System Architecture (Current State)
+## System Architecture (Current State)
 
 ```
-                        ┌─────────────────────────────┐
-  Browser / Client ────►│   FastAPI API Gateway        │
-                        │   Port 3000                  │
-                        │                              │
-                        │  ┌────────────────────────┐  │
-                        │  │   Web Dashboard SPA    │  │
-                        │  │   Chat · Submit · Jobs │  │
-                        │  │   Cluster · Settings   │  │
-                        │  └────────────────────────┘  │
-                        └──────────────┬──────────────┘
-                                       │  LPUSH task
-                                       ▼
-                        ┌─────────────────────────────┐
-                        │   Redis / Valkey Broker      │
-                        │   Port 6379                  │
-                        │                              │
-                        │   Queue: inference_tasks     │
-                        │   Keys:  inference_result:*  │
-                        └──────┬──────────────┬────────┘
-                               │ BRPOP        │ BRPOP
-                    ┌──────────▼──┐      ┌────▼──────────┐
-                    │  Worker A   │      │   Worker B    │   ...N workers
-                    │  Machine 1  │      │   Machine 2   │
-                    │             │      │               │
-                    │  Ollama     │      │  Ollama       │
-                    │  tinyllama  │      │  llama3:8b    │
-                    └─────────────┘      └───────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                        HEAD NODE                                  │
+│                                                                  │
+│  ┌──────────────┐     ┌──────────────────┐     ┌──────────────┐ │
+│  │  Redis        │     │  API Gateway      │     │  Coordinator  │ │
+│  │  Port 6379    │◄────│  Port 3000        │     │  Port 8050    │ │
+│  │               │     │  ┌────────────┐   │     │               │ │
+│  │  Task Queue   │     │  │ Dashboard  │   │     │  Worker       │ │
+│  │  Job Results  │     │  │ (SPA)      │   │     │  Registry     │ │
+│  └──────────────┘     │  └────────────┘   │     │  Health        │ │
+│          ▲            └──────────────────┘     │  Monitor       │ │
+│          │                │                     └───────┬───────┘ │
+│          │                │  LPUSH tasks                │         │
+│          │                ▼                             │         │
+│          │     ┌──────────────────┐                     │         │
+│          └─────┤  Local Workers   │                     │         │
+│                │  (Ollama)        │                     │         │
+│                └──────────────────┘                     │         │
+│                                                         │         │
+│  ┌──────────────────────────────────────────────────────┐│         │
+│  │  llama-server (port 8080)                            ││         │
+│  │  Runs model with --rpc <worker1>:5000 --rpc <w2>:.. ││         │
+│  │  llama.cpp distributes layers across all workers     ││         │
+│  └────────────────────────┬─────────────────────────────┘│         │
+│                           │                              │         │
+└───────────────────────────┼──────────────────────────────┼─────────┘
+                            │                              │
+                     Tailscale Mesh VPN                    │
+                            │                              │
+┌───────────────────────────┼──────────────────────────────┼─────────┐
+│                    WORKER NODE ┌─────────────────────────┘         │
+│                               ▼                                    │
+│  ┌────────────────────┐  ┌────────────────────────────────────┐   │
+│  │  llama-rpc-server  │  │  cluster_worker.py                  │   │
+│  │  Port 5000          │  │  Registers with coordinator        │   │
+│  │                     │  │  Sends heartbeats every 10s        │   │
+│  │  Contributes VRAM   │  │  Starts llama-rpc-server           │   │
+│  │  to head node       │  │                                    │   │
+│  └────────────────────┘  └────────────────────────────────────┘   │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
-Workers write results back to Redis under `inference_result:<job_id>`.  
-The API Gateway polls Redis on `GET /api/v1/status/{job_id}` — no direct worker-to-gateway connection is needed.
+### Two Independent Paths
+
+1. **Redis Queue Path** — Jobs submitted via dashboard → Redis queue → worker polls and runs Ollama locally. Results written back to Redis. Used for single-machine or traditional distributed setups.
+
+2. **Cluster Path** — No queue. Workers register directly with the coordinator. The head node runs `llama-server` with `--rpc` pointing at all workers. Inference is synchronous via `POST /api/v1/generate` on the coordinator, which proxies to `llama-server`. llama.cpp splits model layers across workers automatically.
 
 ---
 
-## 🧩 Component Details
+## Component Details
 
-| Component | Technology | Responsibility | Scaling |
-|---|---|---|---|
-| **Web Dashboard** | Vanilla HTML/CSS/JS (SPA) | Chat UI, job submission, history, cluster view, settings | Stateless — served from gateway |
-| **API Gateway** | FastAPI (Python) | Validates requests, enqueues tasks to Redis, serves dashboard, proxies status queries | Horizontal (stateless) |
-| **Message Broker** | Redis / Valkey 7+ | Persistent FIFO task queue; job result storage | Redis Cluster for HA |
-| **Worker Service** | Python | Blocks on `BRPOP`, runs inference via provider, writes result back to Redis | Horizontal — add workers freely |
-| **Provider Layer** | Python (`providers.py`) | Abstracts Ollama, OpenRouter, OpenAI, vLLM behind a single `generate()` interface | Per-worker config via env vars |
-
----
-
-## 🖥️ Web Dashboard — Panels
-
-The dashboard is a fully client-side SPA served at `/` by the FastAPI gateway. No build step — all HTML, CSS, and JS are inlined in `api_gateway/dashboard.py`.
-
-| Panel | Key Features |
-|---|---|
-| **Dashboard** | Live KPI cards, Chart.js throughput line chart, status doughnut chart, recent activity feed |
-| **Chat** | Real-time conversation UI — user/assistant bubbles, animated typing indicator, per-message token/duration metadata, provider+model selector, auto-resize input |
-| **Submit Job** | Advanced form with temperature & token sliders, quick-fill preset templates (Distributed Computing, Code Refactor, Creative Sci-Fi), provider+model dropdowns |
-| **Jobs History** | Persistent `localStorage` log, search, status filter tabs, slide-out inspect drawer with raw JSON toggle |
-| **Cluster Topology** | Gateway + Redis + Worker node status cards, installed Ollama model registry, supported backend integrations grid |
-| **Settings** | Secure API key management for OpenRouter, OpenAI, vLLM — stored in `localStorage` only, injected per-job at dispatch time, show/hide eye toggles |
+| Component | Technology | Responsibility |
+|---|---|---|
+| **Web Dashboard** | Vanilla HTML/CSS/JS (SPA) | Chat UI, job history, cluster topology, settings |
+| **API Gateway** | FastAPI (Python) | Validates requests, enqueues to Redis, serves dashboard, proxies coordinator status |
+| **Message Broker** | Redis / Valkey 7+ | FIFO task queue + job result storage |
+| **Worker Service** | Python (`worker.py`) | Blocks on `BRPOP`, runs Ollama inference, writes result back |
+| **Cluster Coordinator** | FastAPI (Python) | Worker registry, heartbeat monitor, inference proxy to llama-server |
+| **Cluster Worker** | Python (`cluster_worker.py`) | Sidecar — starts llama-rpc-server, registers with coordinator |
+| **Inference Server** | llama.cpp (`llama-server`) | Runs the model, distributes layers via RPC to all workers |
+| **Provider Layer** | Python (`providers.py`) | Ollama (`OllamaProvider`) and Cluster (`ClusterProvider`) |
 
 ---
 
-## 🔗 Provider Abstraction (`worker/providers.py`)
+## Provider Layer (`worker/providers.py`)
 
-All providers implement a common `BaseProvider.generate()` interface:
+All providers implement a `generate()` interface:
 
 ```python
 def generate(model, prompt, max_tokens, temperature, **kwargs) -> dict:
     # Returns: {model, completion, prompt_tokens, completion_tokens}
 ```
 
-| Provider Name | Backend | Auth |
+| Provider | Backend | Description |
 |---|---|---|
-| `ollama` | Local Ollama HTTP API | None (local) |
-| `openrouter` | `https://openrouter.ai/api/v1` | Bearer token (`api_key` kwarg or `OPENROUTER_API_KEY` env) |
-| `openai` | `https://api.openai.com/v1` | Bearer token (`api_key` kwarg or `OPENAI_API_KEY` env) |
-| `vllm` | Configurable base URL | Optional Bearer token |
-
-API keys can be provided two ways (in order of priority):
-1. **Per-job** — passed in the task payload as `api_key` (set via the Settings panel in the UI)
-2. **Environment variable** — `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `VLLM_API_KEY` on the worker host
+| `ollama` | Local Ollama HTTP API | Default. Auto-discovers installed models. |
+| `cluster` | Coordinator → llama-server | Sends request to coordinator which proxies to llama-server running with RPC across all workers. |
 
 ---
 
-## 📡 API Contract
+## Cluster Architecture (Coordinator)
+
+The coordinator (`coordinator/coordinator.py`) is a lightweight FastAPI service:
+
+- **Worker Registration** — `POST /api/v1/workers/register` — workers register with their host, RPC port, and available VRAM/RAM
+- **Heartbeat** — `POST /api/v1/workers/heartbeat` — workers send heartbeats every 10s; stale workers are marked dead after 30s
+- **Status** — `GET /api/v1/cluster/status` — returns all workers with alive/dead status
+- **RPC Addresses** — `GET /api/v1/cluster/rpc-addrs` — returns `host:port` for alive workers (used by `cluster-llama-entrypoint.sh` to build `--rpc` flags)
+- **Inference Proxy** — `POST /api/v1/generate` — proxies to `llama-server` on port 8080
+- **Health** — `GET /api/v1/health` — coordinator health + alive worker count
+
+No Redis needed for the coordinator itself — it uses an in-memory worker registry.
+
+---
+
+## Deployment (start.sh)
+
+`start.sh` is the single entry point covering all modes:
+
+| Command | What it does |
+|---|---|
+| `bash start.sh` | Head node: Docker stack + API + local Ollama workers |
+| `bash start.sh --cluster` | Head node with cluster mode: adds coordinator + llama-server |
+| `bash start.sh --tailscale` | One-time Tailscale setup on head node, prints IP |
+| `bash start.sh --worker <ip>` | Worker node: Tailscale + deps + cluster_worker.py |
+| `bash start.sh --head-only` | Redis + API only, no workers |
+
+Workers connect via **Tailscale** for a zero-config mesh VPN across machines.
+
+---
+
+## API Endpoints
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/` | Serves the web dashboard SPA |
-| `GET` | `/api/v1/health` | `{service, version, redis_connected}` |
-| `GET` | `/api/v1/models` | `{ollama: [...], openrouter: [], openai: [], vllm: []}` |
-| `POST` | `/api/v1/generate` | Submit job → `{job_id, status: "QUEUED", message}` |
-| `GET` | `/api/v1/status/{job_id}` | `{job_id, status, result, error, started, completed}` |
-
-**Job payload schema:**
-```json
-{
-  "prompt":      "string (required)",
-  "model_id":    "provider/model-name (required)",
-  "max_tokens":  2048,
-  "temperature": 0.7,
-  "api_key":     "optional — overrides env var for this job only"
-}
-```
-
-**Job status lifecycle:**  
-`QUEUED` → `PROCESSING` → `COMPLETED` | `FAILED`
+| `GET` | `/` | Web dashboard SPA |
+| `GET` | `/api/v1/health` | Gateway + Redis connectivity |
+| `GET` | `/api/v1/models` | Ollama model list |
+| `POST` | `/api/v1/generate` | Submit inference job → `job_id` |
+| `GET` | `/api/v1/status/{job_id}` | Poll job result |
+| `GET` | `/api/v1/cluster/status` | Coordinator worker status |
+| `GET` | `/api/v1/cluster/rpc-addrs` | Coordinator RPC addresses |
 
 ---
 
-## 🌐 Distributed Deployment (Multi-Machine)
+## State & Configuration
 
-The architecture is **inherently distributed** via the Redis broker. Workers from any machine on the network can connect to the same Redis instance and pull jobs.
-
-```
-Head Node (runs Redis + API Gateway)
-  │
-  ├── valkey-server --bind 0.0.0.0 --port 6379
-  └── uvicorn api_gateway.main:app --host 0.0.0.0 --port 3000
-
-Worker Nodes (any number of machines)
-  └── REDIS_HOST=<head_ip> python3 worker/worker.py
-       (each worker uses its own local Ollama / vLLM)
-```
-
-**Docker Compose (worker nodes):**
-```bash
-HEAD_NODE_IP=192.168.1.100 \
-docker compose -f docker-compose.worker.yml up -d --scale worker=4
-```
+- **Job state** persisted in Redis (queue + results)
+- **API keys** removed — Younify uses Ollama (local) and Cluster (distributed), no cloud API keys needed
+- **Worker registry** in-memory on coordinator (no persistence needed — workers re-register on reconnect)
+- **Dashboard settings** simplified — no API key management, only informational
 
 ---
 
-## 🛣️ Development Roadmap
+## Ports
 
-### ✅ Phase 1 — Redis Decoupling (Complete)
-- Replaced in-memory queue with Redis/Valkey
-- API Gateway publishes tasks; Workers consume via `BRPOP`
-- Job results persisted in Redis with full status lifecycle
-
-### ✅ Phase 2 — Web Dashboard (Complete)
-- Premium glassmorphic SPA dashboard
-- Chat panel with real-time conversation and polling
-- Job history with localStorage persistence and inspect drawer
-- Settings panel for secure per-browser API key management
-- Analytics with Chart.js (throughput + status breakdown)
-
-### 🔜 Phase 3 — Containerization
-- Docker images for API Gateway and Worker
-- `docker-compose.yml` for full local stack
-- `docker-compose.worker.yml` for remote worker-only deployment
-
-### 🔜 Phase 4 — Production Distribution
-- Kubernetes `Deployment` manifests for gateway and worker pools
-- Redis Cluster or managed Redis (ElastiCache / Upstash) for HA broker
-- Horizontal Pod Autoscaler on worker deployment based on queue depth
-- Nginx / cloud Load Balancer in front of stateless API Gateway replicas
-- MinIO / S3 for shared model weight storage across worker nodes
-
----
-
-## 🔒 Security Notes
-
-- **API keys are never stored server-side.** The Settings panel writes keys to the browser's `localStorage`. They are included in job payloads only at dispatch time and travel encrypted over HTTPS in production.
-- For production, the Redis port (6379) should be firewalled — accessible only from worker/gateway hosts, not the public internet.
-- Consider adding an API key / JWT auth middleware to the FastAPI gateway before exposing it publicly.
-
----
-
-*Stack: FastAPI · Redis/Valkey · Ollama · OpenRouter · OpenAI · vLLM · Vanilla JS · Chart.js*
+| Port | Service |
+|---|---|
+| 3000 | Web Dashboard + API Gateway |
+| 6379 | Redis / Valkey |
+| 8050 | Cluster Coordinator |
+| 8080 | llama-server (inference) |
+| 5000 | llama-rpc-server (per worker) |
+| 11434 | Ollama |

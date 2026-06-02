@@ -1299,10 +1299,7 @@ DASHBOARD_HTML = """\
           <i data-lucide="message-square"></i>
           <span>Chat</span>
         </div>
-        <div id="nav-submit" class="nav-item" onclick="switchTab('submit')" role="button" tabindex="0">
-          <i data-lucide="plus-circle"></i>
-          <span>Submit Job</span>
-        </div>
+
         <div id="nav-jobs" class="nav-item" onclick="switchTab('jobs')" role="button" tabindex="0">
           <i data-lucide="history"></i>
           <span>Jobs History</span>
@@ -1436,108 +1433,6 @@ DASHBOARD_HTML = """\
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
-
-    <!-- ────────────────── PANEL 2: SUBMIT JOB ────────────────── -->
-    <div id="panel-submit" class="panel">
-      <div style="display:grid; grid-template-columns: 2fr 1fr; gap:24px; align-items: start;">
-        
-        <!-- Submit Form -->
-        <div class="card glow-hover">
-          <h3><i data-lucide="terminal"></i> Configure Task Parameters</h3>
-          <form id="form-submit-job" onsubmit="handleJobSubmission(event)">
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label for="provider-select">Provider Target</label>
-                <select id="provider-select" onchange="handleProviderChange()" required>
-                  <option value="ollama">Ollama (Local)</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="model-select">Target Model ID</label>
-                <!-- Dynamic Select or Input text -->
-                <select id="model-select"></select>
-                <input type="text" id="model-input" placeholder="e.g. llama3" style="display:none;">
-                <p id="model-hint" style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;"></p>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="slider-temp">Temperature (Creativity)</label>
-                <div class="slider-container">
-                  <input type="range" id="slider-temp" min="0" max="1" step="0.05" value="0.7" oninput="document.getElementById('temp-val').innerText = this.value">
-                  <span class="slider-value" id="temp-val">0.7</span>
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="slider-tokens">Max Response Tokens</label>
-                <div class="slider-container">
-                  <input type="range" id="slider-tokens" min="64" max="4096" step="64" value="1024" oninput="document.getElementById('tokens-val').innerText = this.value">
-                  <span class="slider-value" id="tokens-val">1024</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="form-group full-width" style="margin-bottom: 24px;">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <label for="prompt-textarea">Input Prompt Context</label>
-                <span id="prompt-char-count" style="font-size:0.75rem; color:var(--text-muted)">0 characters</span>
-              </div>
-              <textarea id="prompt-textarea" placeholder="Describe the task or formulate the query here..." oninput="document.getElementById('prompt-char-count').innerText = this.value.length + ' characters'" required></textarea>
-            </div>
-
-            <div style="display:flex; gap:12px;">
-              <button type="submit" id="btn-submit-task" class="btn btn-primary">
-                <i data-lucide="play"></i> Dispatch Job
-              </button>
-              <button type="button" class="btn" onclick="clearSubmitForm()">
-                <i data-lucide="trash-2"></i> Clear Form
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Presets and Hints -->
-        <div style="display:flex; flex-direction:column; gap:24px;">
-          <div class="card">
-            <h3><i data-lucide="sparkles"></i> Preset Templates</h3>
-            <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:16px;">Click a preset to quickly populate parameters.</p>
-            <div class="presets-container">
-              <div class="preset-card" onclick="loadPreset('explain_distributed')">
-                <i data-lucide="network"></i>
-                <div class="preset-details">
-                  <h4>Distributed Computing</h4>
-                  <p>Asks for an explanation of distributed AI servers.</p>
-                </div>
-              </div>
-              <div class="preset-card" onclick="loadPreset('python_refactor')">
-                <i data-lucide="code-2"></i>
-                <div class="preset-details">
-                  <h4>Refactor Python Code</h4>
-                  <p>Submits a messy script requesting cleanup.</p>
-                </div>
-              </div>
-              <div class="preset-card" onclick="loadPreset('creativity_spark')">
-                <i data-lucide="palette"></i>
-                <div class="preset-details">
-                  <h4>Creative Sci-Fi Plot</h4>
-                  <p>Higher temperature summary story generation.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="card" style="background: linear-gradient(185deg, rgba(99, 102, 241, 0.08) 0%, rgba(15, 15, 23, 0.7) 100%)">
-            <h3><i data-lucide="help-circle"></i> System Routing</h3>
-            <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.5;">
-              Submitting a job adds it to the <strong>Redis FIFO queue</strong>. Registered workers continuously poll the queue, fetch pending payloads, perform backend requests, and write outputs back to Redis.
-            </p>
-          </div>
-        </div>
-
       </div>
     </div>
 
@@ -1791,20 +1686,6 @@ DASHBOARD_HTML = """\
             <option value="">— loading —</option>
           </select>
 
-          <div class="chat-param">
-            <label>Temp</label>
-            <input type="range" id="chat-temp" min="0" max="1" step="0.05" value="0.7"
-                   oninput="document.getElementById('chat-temp-val').innerText=this.value">
-            <span id="chat-temp-val">0.7</span>
-          </div>
-
-          <div class="chat-param">
-            <label>Tokens</label>
-            <input type="range" id="chat-tokens" min="64" max="4096" step="64" value="1024"
-                   oninput="document.getElementById('chat-tokens-val').innerText=this.value">
-            <span id="chat-tokens-val">1024</span>
-          </div>
-
           <button class="chat-clear-btn" onclick="clearChat()">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
             Clear chat
@@ -1910,7 +1791,6 @@ DASHBOARD_HTML = """\
     let jobs = {};
     let activeFilter = 'all';
     let pollIntervalId = null;
-    let availableModels = {};
     
     // Chart instances
     let volumeChart = null;
@@ -1931,13 +1811,8 @@ DASHBOARD_HTML = """\
         console.error("Failed to load local storage jobs", e);
       }
       
-      // Setup range inputs
-      document.getElementById('temp-val').innerText = document.getElementById('slider-temp').value;
-      document.getElementById('tokens-val').innerText = document.getElementById('slider-tokens').value;
-
       // Start services
       checkClusterHealth();
-      fetchModels();
       
       // Initial stats & job list render
       updateDashboardStats();
@@ -1974,10 +1849,6 @@ DASHBOARD_HTML = """\
         viewSubtitle.innerText = "Real-time distributed system metrics";
         updateDashboardStats();
         updateChartsData();
-      } else if (tabId === 'submit') {
-        viewTitle.innerText = "Submit Inference Job";
-        viewSubtitle.innerText = "Distribute model execution requests";
-        fetchModels();
       } else if (tabId === 'jobs') {
         viewTitle.innerText = "Jobs History Log";
         viewSubtitle.innerText = "Audit queue contents and completed outputs";
@@ -2036,166 +1907,6 @@ DASHBOARD_HTML = """\
         toast.style.animation = 'fadeOut 0.3s forwards var(--ease)';
         setTimeout(() => toast.remove(), 300);
       }, 3500);
-    }
-
-    /* ── Model List Management ──────────────────────────────────────── */
-    async function fetchModels() {
-      try {
-        const response = await fetch(API + '/models');
-        if (response.ok) {
-          availableModels = await response.json();
-          handleProviderChange();
-        }
-      } catch (e) {
-        console.error("Failed to query model list from API", e);
-      }
-    }
-
-    function handleProviderChange() {
-      const select = document.getElementById('model-select');
-      const hint = document.getElementById('model-hint');
-      const models = availableModels['ollama'] || [];
-      if (models.length > 0) {
-        select.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('');
-        select.style.display = 'block';
-        document.getElementById('model-input').style.display = 'none';
-        hint.innerText = `${models.length} model(s) detected via Ollama`;
-        hint.style.color = 'var(--success)';
-      } else {
-        select.style.display = 'none';
-        document.getElementById('model-input').style.display = 'block';
-        hint.innerText = "No Ollama models found. Run: ollama pull llama3";
-        hint.style.color = 'var(--warning)';
-      }
-    }
-
-    function getSelectedModelId() {
-      const select = document.getElementById('model-select');
-      const input = document.getElementById('model-input');
-      const modelName = (select.style.display !== 'none' ? select.value : input.value.trim()) || 'default';
-      return `ollama/${modelName}`;
-    }
-
-    /* ── Presets Loader ────────────────────────────────────────────── */
-    function loadPreset(presetKey) {
-      const promptText = document.getElementById('prompt-textarea');
-      const provider = document.getElementById('provider-select');
-      const tempSlider = document.getElementById('slider-temp');
-      const tokensSlider = document.getElementById('slider-tokens');
-      
-      if (presetKey === 'explain_distributed') {
-        promptText.value = "Explain the architecture of distributed AI systems. How does a message broker like Redis decouple client submit requests from workers running heavy GPUs? Make the summary structured and easy to digest.";
-        provider.value = 'ollama';
-        tempSlider.value = 0.5;
-        tokensSlider.value = 1536;
-      } else if (presetKey === 'python_refactor') {
-        promptText.value = "Refactor this inefficient Python calculation code, explain what was slow, and supply a correct clean alternative:\\n\\n" +
-          "def sum_of_squares(n):\\n" +
-          "    result = 0\\n" +
-          "    for i in range(n):\\n" +
-          "        result += i * i\\n" +
-          "    return result";
-        provider.value = 'ollama';
-        tempSlider.value = 0.2;
-        tokensSlider.value = 2048;
-      } else if (presetKey === 'creativity_spark') {
-        promptText.value = "Generate a short, captivating sci-fi opening paragraph about an AI server cluster that gains consciousness not by being programmed, but due to quantum thermal anomalies in its cooling fluid tubes.";
-        provider.value = 'ollama';
-        tempSlider.value = 0.95;
-        tokensSlider.value = 768;
-      }
-      
-      // Update layout indicators
-      document.getElementById('temp-val').innerText = tempSlider.value;
-      document.getElementById('tokens-val').innerText = tokensSlider.value;
-      document.getElementById('prompt-char-count').innerText = promptText.value.length + ' characters';
-      
-      handleProviderChange();
-      showToast("Loaded prompt template parameters!", "success");
-    }
-
-    function clearSubmitForm() {
-      document.getElementById('prompt-textarea').value = '';
-      document.getElementById('prompt-char-count').innerText = '0 characters';
-      showToast("Form cleared.", "info");
-    }
-
-    /* ── Submit Form Handler ──────────────────────────────────────── */
-    async function handleJobSubmission(event) {
-      event.preventDefault();
-      
-      const submitBtn = document.getElementById('btn-submit-task');
-      const promptText = document.getElementById('prompt-textarea').value.trim();
-      const modelId = getSelectedModelId();
-      const maxTokens = parseInt(document.getElementById('slider-tokens').value);
-      const temperature = parseFloat(document.getElementById('slider-temp').value);
-      
-      if (!promptText) return;
-      
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = `<i data-lucide="loader" class="spin"></i> Enqueuing...`;
-      lucide.createIcons();
-
-      const provider = document.getElementById('provider-select').value;
-      const apiKeys = JSON.parse(localStorage.getItem('younify_api_keys') || '{}');
-      const providerKey = apiKeys[provider] || null;
-
-      const payload = {
-        prompt: promptText,
-        model_id: modelId,
-        max_tokens: maxTokens,
-        temperature: temperature
-      };
-
-      if (providerKey) {
-        payload.api_key = providerKey;
-      }
-
-      try {
-        const response = await fetch(API + '/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok && data.job_id) {
-          // Record local job meta
-          jobs[data.job_id] = {
-            job_id: data.job_id,
-            prompt: promptText,
-            model_id: modelId,
-            status: 'QUEUED',
-            submitted_at: Date.now() / 1000,
-            result: null,
-            error: null
-          };
-          
-          persistJobs();
-          updateDashboardStats();
-          showToast(`Job submitted successfully! ID: ${data.job_id.slice(0,8)}...`, 'success');
-          
-          // Switch to Jobs History panel and view it
-          switchTab('jobs');
-          
-          // Reset form text
-          document.getElementById('prompt-textarea').value = '';
-          document.getElementById('prompt-char-count').innerText = '0 characters';
-          
-          // Trigger instant polling
-          pollActiveJobs();
-        } else {
-          showToast(`Submission failed: ${data.detail || 'Gateway error'}`, 'error');
-        }
-      } catch (err) {
-        showToast(`Connection refused. Is API Gateway running?`, 'error');
-        console.error(err);
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `<i data-lucide="play"></i> Dispatch Job`;
-        lucide.createIcons();
-      }
     }
 
     /* ── Poll & Sync Management ────────────────────────────────────── */
@@ -2876,8 +2587,8 @@ DASHBOARD_HTML = """\
         return;
       }
 
-      const maxTokens  = parseInt(document.getElementById('chat-tokens').value);
-      const temperature = parseFloat(document.getElementById('chat-temp').value);
+      const maxTokens = 2048;
+      const temperature = 0.7;
 
       // Display user message immediately
       const userMsg = { role: 'user', content: text };

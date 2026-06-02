@@ -155,7 +155,8 @@ def main():
             r = None
             time.sleep(5)
         except Exception as e:
-            print(f"[WORKER] Unexpected error: {e}")
+            print(f"[WORKER] Unexpected error: {e}. Reconnecting...")
+            r = None
             time.sleep(2)
 
 
