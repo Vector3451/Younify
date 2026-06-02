@@ -20,7 +20,7 @@
 #   6. Prints the dashboard URL
 #   7. Waits for Ctrl+C, then shuts everything down cleanly
 #
-# Dashboard: http://localhost:8090
+# Dashboard: http://localhost:3000
 # =============================================================================
 
 set -euo pipefail
@@ -29,7 +29,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NUM_WORKERS=1
 HEAD_ONLY=false
-API_PORT=8090
+API_PORT=3000
 REDIS_PORT=6379
 
 # ── Parse args ───────────────────────────────────────────────────────────────

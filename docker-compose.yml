@@ -20,7 +20,7 @@ services:
       dockerfile: api_gateway/Dockerfile
     container_name: younify-api
     ports:
-      - "8090:8000"
+      - "3000:8000"
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379

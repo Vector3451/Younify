@@ -11,7 +11,7 @@ Build a **highly available, horizontally scalable** distributed system that acce
 ```
                         ┌─────────────────────────────┐
   Browser / Client ────►│   FastAPI API Gateway        │
-                        │   Port 8090                  │
+                        │   Port 3000                  │
                         │                              │
                         │  ┌────────────────────────┐  │
                         │  │   Web Dashboard SPA    │  │
@@ -126,7 +126,7 @@ The architecture is **inherently distributed** via the Redis broker. Workers fro
 Head Node (runs Redis + API Gateway)
   │
   ├── valkey-server --bind 0.0.0.0 --port 6379
-  └── uvicorn api_gateway.main:app --host 0.0.0.0 --port 8090
+  └── uvicorn api_gateway.main:app --host 0.0.0.0 --port 3000
 
 Worker Nodes (any number of machines)
   └── REDIS_HOST=<head_ip> python3 worker/worker.py

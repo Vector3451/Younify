@@ -8,7 +8,7 @@
 │                                                             │
 │  ┌──────────────┐    ┌──────────────┐                       │
 │  │  API Gateway  │───►│    Redis     │◄──────────────────┐  │
-│  │  :8090 (Docker)│   │  :6379 (Docker)│                  │  │
+│  │  :3000 (Docker)│   │  :6379 (Docker)│                  │  │
 │  └──────────────┘    └──────────────┘                    │  │
 │                                                          │  │
 └──────────────────────────────────────────────────────────┼──┘
@@ -40,7 +40,7 @@
 - **Worker machines:** Python 3.10+ and `pip` installed
 - Ollama (or other AI backend) running on each worker machine
 - All machines on the same network
-- Port 6379 (Redis) and 8090 (API) open on the head node
+- Port 6379 (Redis) and 3000 (API) open on the head node
 
 ## Step 1: Set Up the Head Node
 
@@ -58,7 +58,7 @@ hostname -I
 
 Verify:
 ```bash
-curl http://localhost:8090/
+curl http://localhost:3000/
 # → {"service":"AI Inference Gateway","redis_connected":true}
 ```
 
@@ -90,12 +90,12 @@ docker compose -f docker-compose.worker.yml up -d --scale worker=2
 
 ```bash
 # Submit a job
-curl -X POST http://192.168.1.100:8090/api/v1/generate \\
+curl -X POST http://192.168.1.100:3000/api/v1/generate \\
   -H "Content-Type: application/json" \
   -d '{"prompt": "Hello from the cluster!", "model_id": "ollama/llama3:7b"}'
 
 # Poll for results
-curl http://192.168.1.100:8090/api/v1/status/JOB_ID
+curl http://192.168.1.100:3000/api/v1/status/JOB_ID
 ```
 
 ## Model Routing (`model_id` format)

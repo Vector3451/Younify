@@ -4,7 +4,7 @@ import json
 from typing import Dict, Any
 
 # --- Configuration ---
-API_BASE_URL = "http://localhost:8090/api/v1"
+API_BASE_URL = "http://localhost:3000/api/v1"
 
 def submit_task(prompt: str, temp: float = 0.7) -> str:
     """Sends a task to the API Gateway and returns the job_id."""
