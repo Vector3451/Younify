@@ -40,6 +40,26 @@ Younify/
 
 ---
 
+## 🚀 Quick Start (One Command)
+
+```bash
+# Start everything: Redis + API Gateway + Web UI + local worker
+bash start.sh
+
+# With 3 local workers
+bash start.sh --workers 3
+
+# Head-only (no local worker — for multi-machine setups)
+bash start.sh --head-only
+
+# Stop everything
+bash stop.sh
+```
+
+Dashboard opens at **http://localhost:3000**.
+
+---
+
 ## 🚀 Quick Start (Local / Development)
 
 ### Prerequisites
