@@ -9,10 +9,11 @@ No job queue involved — direct inference.
 
 import os
 import requests
-from providers import BaseProvider, register_provider
 
 
-class ClusterProvider(BaseProvider):
+class ClusterProvider:
+    """Cluster provider — matches BaseProvider interface via duck typing."""
+
     name = "cluster"
 
     def __init__(self, coordinator_url: str = None):
@@ -45,5 +46,6 @@ class ClusterProvider(BaseProvider):
         }
 
 
-# Auto-register so providers.get_provider("cluster") works
+# Register with the providers module (deferred import avoids circular dep)
+from providers import register_provider  # noqa: E402
 register_provider("cluster", lambda: ClusterProvider())

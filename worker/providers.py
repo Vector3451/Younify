@@ -21,8 +21,6 @@ from abc import ABC, abstractmethod
 
 import requests
 
-from cluster_provider import ClusterProvider  # noqa: F401
-
 
 class BaseProvider(ABC):
     name: str = "base"
