@@ -44,7 +44,11 @@ RESULT_PREFIX = "inference_result:"
 
 
 def connect_redis():
-    client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, decode_responses=True)
+    client = redis.Redis(
+        host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB,
+        decode_responses=True,
+        protocol=2,  # Force RESP2 for compatibility with older redis-py clients
+    )
     client.ping()
     return client
 
