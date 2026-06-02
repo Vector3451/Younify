@@ -19,7 +19,7 @@ x-worker-common: &worker-common
     REDIS_HOST: "${HEAD_NODE_IP:-192.168.1.100}"
     REDIS_PORT: "${REDIS_PORT:-6379}"
     REDIS_DB: 0
-    OLLAMA_BASE_URL: "${OLLAMA_BASE_URL:-http://host.docker.internal:11434}"
+    OLLAMA_BASE_URL: "${OLLAMA_BASE_URL:-http://172.17.0.1:11434}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
