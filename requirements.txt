@@ -8,3 +8,7 @@ redis>=5.0.0
 
 # Testing
 requests>=2.32.0
+
+# GPU monitoring (optional, for cluster worker memory detection)
+# pynvml; sys_platform != "darwin"
+# psutil

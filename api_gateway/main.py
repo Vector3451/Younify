@@ -84,7 +84,7 @@ class PromptRequest(BaseModel):
         'Providers: ollama, openrouter, openai, vllm. '
         'Example: "ollama/llama3:7b".',
     )
-    api_key: Optional[str] = Field(None, description="Optional API key for the provider.")
+    api_key: Optional[str] = Field(None, description="Deprecated — Younify uses Ollama for inference.")
 
 
 class JobAcceptedResponse(BaseModel):
@@ -143,7 +143,7 @@ async def health_check():
     }
 
 
-@app.get("/api/v1/models", summary="List available models")
+@app.get("/api/v1/models", summary="List available Ollama models")
 async def list_models():
     """Probe Ollama for available models. Returns empty list if Ollama is unreachable."""
     import requests as req
@@ -152,15 +152,10 @@ async def list_models():
         resp = req.get(f"{ollama_url}/api/tags", timeout=5)
         if resp.status_code == 200:
             models = resp.json().get("models", [])
-            return {
-                "ollama": [m["name"] for m in models],
-                "openrouter": [],
-                "openai": [],
-                "vllm": [],
-            }
+            return {"ollama": [m["name"] for m in models]}
     except Exception:
         pass
-    return {"ollama": [], "openrouter": [], "openai": [], "vllm": []}
+    return {"ollama": []}
 
 
 @app.post(
@@ -235,6 +230,39 @@ async def get_status(job_id: str):
 
     data = json.loads(raw)
     return data
+
+
+# ---------------------------------------------------------------------------
+# Cluster Coordinator Proxy Endpoints
+# ---------------------------------------------------------------------------
+COORDINATOR_URL = os.environ.get("COORDINATOR_URL", "http://localhost:8050")
+
+
+@app.get("/api/v1/cluster/status", summary="Cluster coordinator status")
+async def cluster_status():
+    """Proxy to coordinator for cluster status."""
+    import requests as req
+    try:
+        resp = req.get(f"{COORDINATOR_URL}/api/v1/cluster-status", timeout=5)
+        return resp.json()
+    except Exception:
+        return {
+            "total_workers": 0,
+            "alive_workers": 0,
+            "workers": [],
+            "error": "Coordinator unreachable",
+        }
+
+
+@app.get("/api/v1/cluster/rpc-addrs", summary="Cluster RPC addresses")
+async def cluster_rpc_addrs():
+    """Proxy to coordinator for RPC addresses."""
+    import requests as req
+    try:
+        resp = req.get(f"{COORDINATOR_URL}/api/v1/rpc-addrs", timeout=5)
+        return resp.json()
+    except Exception:
+        return {"addresses": [], "error": "Coordinator unreachable"}
 
 
 if __name__ == "__main__":

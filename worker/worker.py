@@ -131,7 +131,7 @@ def main():
     print("=" * 60)
     print(f"  Redis:    {REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}")
     print(f"  Queue:    {TASK_QUEUE}")
-    print(f"  Providers: ollama, openrouter, openai, vllm")
+    print(f"  Providers: ollama, cluster")
     print("=" * 60)
 
     r = None

@@ -1452,10 +1452,7 @@ DASHBOARD_HTML = """\
               <div class="form-group">
                 <label for="provider-select">Provider Target</label>
                 <select id="provider-select" onchange="handleProviderChange()" required>
-                  <option value="ollama">Ollama (Local Node)</option>
-                  <option value="openrouter">OpenRouter (Cloud API)</option>
-                  <option value="openai">OpenAI (Commercial)</option>
-                  <option value="vllm">vLLM (Local Endpoint)</option>
+                  <option value="ollama">Ollama (Local)</option>
                 </select>
               </div>
               <div class="form-group">
@@ -1652,6 +1649,35 @@ DASHBOARD_HTML = """\
           </div>
         </div>
 
+        <!-- Cluster Coordinator Card -->
+        <div class="node-card">
+          <div class="node-status-glow"></div>
+          <div class="node-header">
+            <div class="node-title-group">
+              <i data-lucide="server"></i>
+              <div>
+                <div class="node-name">Cluster Coordinator</div>
+                <div class="node-role">Distributed Inference Orchestrator</div>
+              </div>
+            </div>
+            <span id="cluster-coord-badge" class="badge-status badge-QUEUED">CHECKING</span>
+          </div>
+          <div class="node-info-list">
+            <div class="node-info-item">
+              <span>Coordinator Status</span>
+              <span id="cluster-coord-status">Checking...</span>
+            </div>
+            <div class="node-info-item">
+              <span>Cluster Workers</span>
+              <span id="cluster-coord-workers">-</span>
+            </div>
+            <div class="node-info-item">
+              <span>RPC Nodes</span>
+              <span id="cluster-coord-rpc">-</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Active Worker Status Card -->
         <div class="node-card">
           <div class="node-status-glow"></div>
@@ -1714,19 +1740,11 @@ DASHBOARD_HTML = """\
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
           <div style="padding:16px; background:rgba(255,255,255,0.01); border:1px solid var(--border); border-radius:var(--radius-sm)">
             <h4 style="font-size:0.9rem; margin-bottom:4px; font-weight:600; display:flex; align-items:center; gap:8px;"><span style="width:6px; height:6px; border-radius:50%; background:var(--success)"></span> Ollama</h4>
-            <p style="font-size:0.75rem; color:var(--text-secondary)">Local server execution. Recommended for offline privacy.</p>
+            <p style="font-size:0.75rem; color:var(--text-secondary)">Local inference. The default provider. Auto-discovers installed models.</p>
           </div>
           <div style="padding:16px; background:rgba(255,255,255,0.01); border:1px solid var(--border); border-radius:var(--radius-sm)">
-            <h4 style="font-size:0.9rem; margin-bottom:4px; font-weight:600; display:flex; align-items:center; gap:8px;"><span style="width:6px; height:6px; border-radius:50%; background:var(--accent)"></span> OpenRouter</h4>
-            <p style="font-size:0.75rem; color:var(--text-secondary)">Cloud aggregator. Access hundreds of open weights LLMs.</p>
-          </div>
-          <div style="padding:16px; background:rgba(255,255,255,0.01); border:1px solid var(--border); border-radius:var(--radius-sm)">
-            <h4 style="font-size:0.9rem; margin-bottom:4px; font-weight:600; display:flex; align-items:center; gap:8px;"><span style="width:6px; height:6px; border-radius:50%; background:#10b981"></span> OpenAI</h4>
-            <p style="font-size:0.75rem; color:var(--text-secondary)">GPT-4o, GPT-4, GPT-3.5 APIs. Requires commercial keys.</p>
-          </div>
-          <div style="padding:16px; background:rgba(255,255,255,0.01); border:1px solid var(--border); border-radius:var(--radius-sm)">
-            <h4 style="font-size:0.9rem; margin-bottom:4px; font-weight:600; display:flex; align-items:center; gap:8px;"><span style="width:6px; height:6px; border-radius:50%; background:var(--warning)"></span> vLLM</h4>
-            <p style="font-size:0.75rem; color:var(--text-secondary)">Highly optimized server for locally hosted multi-GPU machines.</p>
+            <h4 style="font-size:0.9rem; margin-bottom:4px; font-weight:600; display:flex; align-items:center; gap:8px;"><span style="width:6px; height:6px; border-radius:50%; background:#a855f7"></span> Cluster (Distributed)</h4>
+            <p style="font-size:0.75rem; color:var(--text-secondary)">Pool VRAM across machines via Tailscale. Uses llama.cpp RPC to run models collaboratively.</p>
           </div>
         </div>
       </div>
@@ -1745,66 +1763,14 @@ DASHBOARD_HTML = """\
           </p>
         </div>
 
-        <form id="form-settings" onsubmit="saveApiKeys(event)">
-          <div class="settings-grid">
-
-            <!-- OpenRouter -->
-            <div>
-              <label for="input-key-openrouter" style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                <span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;"></span>
-                OpenRouter API Key
-              </label>
-              <div class="pw-field-wrap">
-                <input type="password" id="input-key-openrouter" placeholder="sk-or-v1-..." style="font-family:var(--font-mono);">
-                <button type="button" class="pw-toggle" onclick="togglePw('input-key-openrouter', this)" title="Show / hide key">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                </button>
-              </div>
-              <p style="font-size:0.73rem;color:var(--text-muted);margin-top:5px;">Models prefixed <code>openrouter/</code></p>
-            </div>
-
-            <!-- OpenAI -->
-            <div>
-              <label for="input-key-openai" style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                <span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;"></span>
-                OpenAI API Key
-              </label>
-              <div class="pw-field-wrap">
-                <input type="password" id="input-key-openai" placeholder="sk-proj-..." style="font-family:var(--font-mono);">
-                <button type="button" class="pw-toggle" onclick="togglePw('input-key-openai', this)" title="Show / hide key">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                </button>
-              </div>
-              <p style="font-size:0.73rem;color:var(--text-muted);margin-top:5px;">Models prefixed <code>openai/</code></p>
-            </div>
-
-            <!-- vLLM -->
-            <div>
-              <label for="input-key-vllm" style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                <span style="width:8px;height:8px;border-radius:50%;background:var(--warning);display:inline-block;"></span>
-                vLLM Bearer Token
-                <span style="font-size:0.7rem;padding:2px 7px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--text-muted);">Optional</span>
-              </label>
-              <div class="pw-field-wrap">
-                <input type="password" id="input-key-vllm" placeholder="Leave blank if auth is disabled" style="font-family:var(--font-mono);">
-                <button type="button" class="pw-toggle" onclick="togglePw('input-key-vllm', this)" title="Show / hide key">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                </button>
-              </div>
-              <p style="font-size:0.73rem;color:var(--text-muted);margin-top:5px;">Models prefixed <code>vllm/</code></p>
-            </div>
-
-          </div><!-- /.settings-grid -->
-
-          <div style="display:flex; gap:12px; margin-top:28px; padding-top:20px; border-top:1px solid var(--border);">
-            <button type="submit" class="btn btn-primary" id="btn-save-settings">
-              <i data-lucide="save"></i> Save Credentials
-            </button>
-            <button type="button" class="btn" onclick="clearSettingsForm()">
-              <i data-lucide="trash-2"></i> Clear All Keys
-            </button>
-          </div>
-        </form>
+        <div class="settings-notice" style="margin-bottom:18px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          <p>
+            Younify uses <strong>Ollama</strong> for local inference. No API keys needed.
+            Install Ollama from <a href="https://ollama.com" target="_blank" rel="noopener" style="color:var(--accent)">ollama.com</a>
+            and pull a model to get started.
+          </p>
+        </div>
       </div>
 
     </div>
@@ -1817,10 +1783,7 @@ DASHBOARD_HTML = """\
         <div class="chat-toolbar">
           <label for="chat-provider-select">Provider</label>
           <select id="chat-provider-select" onchange="chatProviderChange()">
-            <option value="ollama">Ollama (Local)</option>
-            <option value="openrouter">OpenRouter</option>
-            <option value="openai">OpenAI</option>
-            <option value="vllm">vLLM</option>
+            <option value="ollama">Ollama</option>
           </select>
 
           <label for="chat-model-select">Model</label>
@@ -2089,39 +2052,28 @@ DASHBOARD_HTML = """\
     }
 
     function handleProviderChange() {
-      const provider = document.getElementById('provider-select').value;
       const select = document.getElementById('model-select');
-      const input = document.getElementById('model-input');
       const hint = document.getElementById('model-hint');
-      
-      const models = availableModels[provider] || [];
-      
+      const models = availableModels['ollama'] || [];
       if (models.length > 0) {
         select.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('');
         select.style.display = 'block';
-        input.style.display = 'none';
-        hint.innerText = `${models.length} model(s) cached on node`;
+        document.getElementById('model-input').style.display = 'none';
+        hint.innerText = `${models.length} model(s) detected via Ollama`;
         hint.style.color = 'var(--success)';
       } else {
         select.style.display = 'none';
-        input.style.display = 'block';
-        if (provider === 'ollama') {
-          hint.innerText = "No Ollama models found. Start your daemon & run: ollama pull llama3";
-          hint.style.color = 'var(--warning)';
-        } else {
-          hint.innerText = "Enter standard model name string manually";
-          hint.style.color = 'var(--text-secondary)';
-        }
+        document.getElementById('model-input').style.display = 'block';
+        hint.innerText = "No Ollama models found. Run: ollama pull llama3";
+        hint.style.color = 'var(--warning)';
       }
     }
 
     function getSelectedModelId() {
-      const provider = document.getElementById('provider-select').value;
       const select = document.getElementById('model-select');
       const input = document.getElementById('model-input');
-      
       const modelName = (select.style.display !== 'none' ? select.value : input.value.trim()) || 'default';
-      return `${provider}/${modelName}`;
+      return `ollama/${modelName}`;
     }
 
     /* ── Presets Loader ────────────────────────────────────────────── */
@@ -2557,6 +2509,7 @@ DASHBOARD_HTML = """\
     /* ── Cluster Topology Renderer ────────────────────────────────── */
     async function renderClusterTopology() {
       checkClusterHealth();
+      updateCoordinatorStatus();
       
       // Fetch models tag container
       const modelsContainer = document.getElementById('cluster-installed-models');
@@ -2631,6 +2584,42 @@ DASHBOARD_HTML = """\
         }
       } catch (e) {
         setHealthStatusFailed();
+      }
+    }
+
+    async function updateCoordinatorStatus() {
+      const coordBadge = document.getElementById('cluster-coord-badge');
+      const coordStatus = document.getElementById('cluster-coord-status');
+      const coordWorkers = document.getElementById('cluster-coord-workers');
+      const coordRpc = document.getElementById('cluster-coord-rpc');
+      try {
+        const resp = await fetch(API + '/cluster/status');
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.error) {
+            coordBadge.className = 'badge-status badge-FAILED';
+            coordBadge.innerText = 'OFFLINE';
+            coordStatus.innerText = 'Unreachable';
+            coordWorkers.innerText = '-';
+            coordRpc.innerText = '-';
+          } else {
+            coordBadge.className = 'badge-status badge-COMPLETED';
+            coordBadge.innerText = 'ONLINE';
+            coordStatus.innerText = data.alive_workers > 0 ? 'Active' : 'No Workers';
+            coordWorkers.innerText = `${data.alive_workers} / ${data.total_workers} alive`;
+            coordRpc.innerText = data.alive_workers > 0 ? `${data.alive_workers} node(s)` : 'None';
+          }
+        } else {
+          coordBadge.className = 'badge-status badge-FAILED';
+          coordBadge.innerText = 'OFFLINE';
+          coordStatus.innerText = 'Coordinator Down';
+        }
+      } catch (e) {
+        if (coordBadge) {
+          coordBadge.className = 'badge-status badge-FAILED';
+          coordBadge.innerText = 'OFFLINE';
+          coordStatus.innerText = 'Coordinator Unreachable';
+        }
       }
     }
 
@@ -2889,9 +2878,6 @@ DASHBOARD_HTML = """\
 
       const maxTokens  = parseInt(document.getElementById('chat-tokens').value);
       const temperature = parseFloat(document.getElementById('chat-temp').value);
-      const provider = document.getElementById('chat-provider-select').value;
-      const apiKeys = JSON.parse(localStorage.getItem('younify_api_keys') || '{}');
-      const apiKey = apiKeys[provider] || null;
 
       // Display user message immediately
       const userMsg = { role: 'user', content: text };
@@ -2913,7 +2899,6 @@ DASHBOARD_HTML = """\
         max_tokens: maxTokens,
         temperature: temperature
       };
-      if (apiKey) payload.api_key = apiKey;
 
       try {
         const resp = await fetch(API + '/generate', {
@@ -2987,29 +2972,15 @@ DASHBOARD_HTML = """\
     }
 
     function loadApiKeysForm() {
-      const keys = JSON.parse(localStorage.getItem('younify_api_keys') || '{}');
-      document.getElementById('input-key-openrouter').value = keys.openrouter || '';
-      document.getElementById('input-key-openai').value = keys.openai || '';
-      document.getElementById('input-key-vllm').value = keys.vllm || '';
     }
 
     function saveApiKeys(event) {
       if (event) event.preventDefault();
-      const keys = {
-        openrouter: document.getElementById('input-key-openrouter').value.trim(),
-        openai: document.getElementById('input-key-openai').value.trim(),
-        vllm: document.getElementById('input-key-vllm').value.trim()
-      };
-      localStorage.setItem('younify_api_keys', JSON.stringify(keys));
-      showToast("API Credentials saved successfully!", "success");
+      showToast("No API keys needed — Younify uses Ollama.", "info");
     }
 
     function clearSettingsForm() {
-      document.getElementById('input-key-openrouter').value = '';
-      document.getElementById('input-key-openai').value = '';
-      document.getElementById('input-key-vllm').value = '';
-      localStorage.removeItem('younify_api_keys');
-      showToast("Credentials cleared from browser storage.", "info");
+      showToast("Nothing to clear — Younify uses Ollama.", "info");
     }
 
     /* ── Utilities ────────────────────────────────────────────────── */

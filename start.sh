@@ -29,6 +29,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NUM_WORKERS=1
 HEAD_ONLY=false
+CLUSTER_MODE=false
+COORDINATOR_ONLY=false
 API_PORT=3000
 REDIS_PORT=6379
 
@@ -37,6 +39,8 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --workers|-w)  NUM_WORKERS="$2"; shift 2 ;;
         --head-only)   HEAD_ONLY=true; shift ;;
+        --cluster)     CLUSTER_MODE=true; shift ;;
+        --coordinator-only) COORDINATOR_ONLY=true; shift ;;
         --port|-p)     API_PORT="$2"; shift 2 ;;
         --redis-port)  REDIS_PORT="$2"; shift 2 ;;
         -h|--help)
@@ -134,9 +138,44 @@ echo -e "  ${GREEN}║                                                  ║${NC}
 echo -e "  ${GREEN}╚══════════════════════════════════════════════════╝${NC}"
 echo ""
 
+# ── Start cluster coordinator ────────────────────────────────────────────────
+if [[ "$CLUSTER_MODE" == true ]] || [[ "$COORDINATOR_ONLY" == true ]]; then
+    PYTHON=""
+    if [[ -f ".venv/bin/python3" ]]; then
+        PYTHON=".venv/bin/python3"
+    elif command -v python3 &>/dev/null; then
+        PYTHON="python3"
+    fi
+
+    if [[ -n "$PYTHON" ]]; then
+        info "Starting Cluster Coordinator..."
+        $PYTHON -m uvicorn coordinator.coordinator:coordinator_app \
+            --host 0.0.0.0 --port 8050 &
+        COORD_PID=$!
+        info "Coordinator started (PID: $COORD_PID)"
+        WORKER_PIDS="${WORKER_PIDS} $COORD_PID"
+    fi
+fi
+
+# ── Start cluster worker sidecar ─────────────────────────────────────────────
+if [[ "$CLUSTER_MODE" == true ]]; then
+    if [[ -n "$PYTHON" ]]; then
+        info "Starting Cluster Worker sidecar..."
+        $PYTHON worker/cluster_worker.py \
+            --coordinator "${COORDINATOR_URL:-http://localhost:8050}" &
+        CLUSTER_PID=$!
+        info "Cluster worker started (PID: $CLUSTER_PID)"
+        WORKER_PIDS="${WORKER_PIDS} $CLUSTER_PID"
+    fi
+fi
+
 # ── Start local workers ──────────────────────────────────────────────────────
-if [[ "$HEAD_ONLY" == true ]]; then
-    info "Head-only mode — skipping local workers."
+if [[ "$HEAD_ONLY" == true ]] || [[ "$COORDINATOR_ONLY" == true ]]; then
+    if [[ "$HEAD_ONLY" == true ]]; then
+        info "Head-only mode — skipping local workers."
+    else
+        info "Coordinator-only mode — skipping local workers."
+    fi
     info "To add workers, run on other machines:"
     info "  REDIS_HOST=$(hostname -I | awk '{print $1}') bash run-worker.sh"
 else
