@@ -49,7 +49,7 @@ echo "Coordinator: $COORDINATOR_URL"
 echo "Port:        $PORT"
 echo ""
 
-RPC_ADDRS=$(curl -sf "$COORDINATOR_URL/api/v1/rpc-addrs" | python3 -c "
+RPC_ADDRS=$(curl -sf "$COORDINATOR_URL/api/v1/cluster/rpc-addrs" | python3 -c "
 import sys, json
 data = json.load(sys.stdin)
 addrs = data.get('addresses', [])

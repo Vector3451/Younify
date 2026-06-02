@@ -243,7 +243,7 @@ async def cluster_status():
     """Proxy to coordinator for cluster status."""
     import requests as req
     try:
-        resp = req.get(f"{COORDINATOR_URL}/api/v1/cluster-status", timeout=5)
+        resp = req.get(f"{COORDINATOR_URL}/api/v1/cluster/status", timeout=5)
         return resp.json()
     except Exception:
         return {
@@ -259,7 +259,7 @@ async def cluster_rpc_addrs():
     """Proxy to coordinator for RPC addresses."""
     import requests as req
     try:
-        resp = req.get(f"{COORDINATOR_URL}/api/v1/rpc-addrs", timeout=5)
+        resp = req.get(f"{COORDINATOR_URL}/api/v1/cluster/rpc-addrs", timeout=5)
         return resp.json()
     except Exception:
         return {"addresses": [], "error": "Coordinator unreachable"}
