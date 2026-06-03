@@ -63,10 +63,16 @@ def process_task(r: redis.Redis, task: dict):
     temperature = task.get("temperature", 0.7)
     model_id = task.get("model_id", "default-model")
 
+    logs: list[str] = []
+
+    def log(msg: str):
+        logs.append(msg)
+        print(msg)
+
     # Resolve provider for logging
     provider_name, model_name = parse_model_id(model_id)
-    print(f"\n[WORKER] Job {job_id} | Provider: {provider_name} | Model: {model_name}")
-    print(f"[WORKER] Prompt: {prompt[:80]}{'...' if len(prompt) > 80 else ''}")
+    log(f"[WORKER] Job {job_id} | Provider: {provider_name} | Model: {model_name}")
+    log(f"[WORKER] Prompt: {prompt[:80]}{'...' if len(prompt) > 80 else ''}")
 
     # Update status → PROCESSING
     r.set(f"{RESULT_PREFIX}{job_id}", json.dumps({
@@ -74,6 +80,7 @@ def process_task(r: redis.Redis, task: dict):
         "status": "PROCESSING",
         "result": None,
         "error": None,
+        "logs": logs,
         "started": time.time(),
         "completed": None,
     }))
@@ -87,39 +94,44 @@ def process_task(r: redis.Redis, task: dict):
             api_key=task.get("api_key"),
         )
 
+        log(f"[WORKER] Job {job_id} -> COMPLETED ({result.get('completion_tokens', 0)} tokens)")
+
         r.set(f"{RESULT_PREFIX}{job_id}", json.dumps({
             "job_id": job_id,
             "status": "COMPLETED",
             "result": result,
             "error": None,
+            "logs": logs,
             "started": time.time(),
             "completed": time.time(),
         }))
-        print(f"[WORKER] Job {job_id} -> COMPLETED ({result.get('completion_tokens', 0)} tokens)")
 
     except ValueError as e:
-        # Provider not found / bad model_id format
         error_msg = f"Configuration error: {e}"
+        log(f"[WORKER] Job {job_id} -> FAILED: {error_msg}")
+
         r.set(f"{RESULT_PREFIX}{job_id}", json.dumps({
             "job_id": job_id,
             "status": "FAILED",
             "result": None,
             "error": error_msg,
+            "logs": logs,
             "started": time.time(),
             "completed": time.time(),
         }))
-        print(f"[WORKER] Job {job_id} -> FAILED: {error_msg}")
 
     except Exception as e:
+        log(f"[WORKER] Job {job_id} -> FAILED: {e}")
+
         r.set(f"{RESULT_PREFIX}{job_id}", json.dumps({
             "job_id": job_id,
             "status": "FAILED",
             "result": None,
             "error": str(e),
+            "logs": logs,
             "started": time.time(),
             "completed": time.time(),
         }))
-        print(f"[WORKER] Job {job_id} -> FAILED: {e}")
 
 
 # ---------------------------------------------------------------------------

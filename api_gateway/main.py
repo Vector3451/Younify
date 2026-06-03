@@ -105,6 +105,7 @@ class JobStatusResponse(BaseModel):
     status: str
     result: Optional[JobResult] = None
     error: Optional[str] = None
+    logs: Optional[list[str]] = None
     started: Optional[float] = None
     completed: Optional[float] = None
 
@@ -198,6 +199,7 @@ async def submit_job(request: PromptRequest):
             "status": "QUEUED",
             "result": None,
             "error": None,
+            "logs": None,
             "started": None,
             "completed": None,
             "submitted_at": task_payload["submitted_at"],

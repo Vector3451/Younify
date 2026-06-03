@@ -1173,6 +1173,27 @@ DASHBOARD_HTML = """\
       background: rgba(0, 0, 0, 0.4);
     }
 
+    #drawer-logs {
+      background: rgba(0,0,0,0.6);
+      border-color: var(--border);
+      line-height: 1.6;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 0.75rem;
+    }
+
+    #drawer-logs .log-line {
+      padding: 1px 0;
+    }
+
+    #drawer-logs .log-line.error {
+      color: #fda4af;
+    }
+
+    #drawer-logs .log-line.warn {
+      color: #fcd34d;
+    }
+
     .performance-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -1210,6 +1231,167 @@ DASHBOARD_HTML = """\
     .toast-success { border-left: 4px solid var(--success); }
     .toast-error { border-left: 4px solid var(--danger); }
     .toast-info { border-left: 4px solid var(--accent); }
+
+    /* ── Conversation Sidebar ────────────────────────────────────────── */
+    .conv-sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      background: rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .conv-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .conv-new-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      transition: all var(--transition-speed) var(--ease);
+    }
+
+    .conv-new-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .conv-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .conv-item {
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      transition: all var(--transition-speed) var(--ease);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .conv-item:hover {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+
+    .conv-item.active {
+      background: var(--accent-glow);
+      border: 1px solid var(--border-glow);
+      color: var(--text-primary);
+    }
+
+    .conv-item-title {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .conv-item-delete {
+      opacity: 0;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 2px;
+      border-radius: 4px;
+      transition: all var(--transition-speed) var(--ease);
+      display: flex;
+      align-items: center;
+    }
+
+    .conv-item:hover .conv-item-delete {
+      opacity: 1;
+    }
+
+    .conv-item-delete:hover {
+      color: var(--danger);
+      background: rgba(239,68,68,0.1);
+    }
+
+    .chat-layout {
+      flex-direction: row;
+    }
+
+    .chat-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* ── Code Blocks ─────────────────────────────────────────────────── */
+    .chat-bubble pre {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      margin: 8px 0;
+      overflow-x: auto;
+      position: relative;
+    }
+
+    .chat-bubble pre code {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: var(--text-primary);
+      background: none;
+      padding: 0;
+    }
+
+    .chat-bubble code {
+      font-family: var(--font-mono);
+      font-size: 0.85em;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--accent);
+    }
+
+    .chat-bubble .copy-code-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 3px 7px;
+      font-size: 0.7rem;
+      transition: all var(--transition-speed) var(--ease);
+    }
+
+    .chat-bubble .copy-code-btn:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.1);
+    }
 
     /* ── Keyframe Animations ────────────────────────────────────────── */
     @keyframes fadeIn {
@@ -1299,7 +1481,6 @@ DASHBOARD_HTML = """\
           <i data-lucide="message-square"></i>
           <span>Chat</span>
         </div>
-
         <div id="nav-jobs" class="nav-item" onclick="switchTab('jobs')" role="button" tabindex="0">
           <i data-lucide="history"></i>
           <span>Jobs History</span>
@@ -1603,68 +1784,47 @@ DASHBOARD_HTML = """\
         </div>
       </div>
 
-      <div class="card">
-        <h3><i data-lucide="package"></i> Installed Ollama Models</h3>
-        <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:16px;">
-          The local worker has access to the following pre-downloaded LLMs via Ollama. You can submit jobs using these IDs.
-        </p>
-        <div class="tag-container" id="cluster-installed-models">
-          <span style="color:var(--text-muted); font-size:0.85rem;">Scanning local Ollama registry...</span>
-        </div>
-        
-        <div style="margin-top: 24px; padding: 16px; background: rgba(0, 0, 0, 0.2); border-radius: var(--radius-sm); border: 1px solid var(--border)">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-            <div>
-              <h4 style="font-size:0.9rem; font-weight:600; margin-bottom:4px;">Want to add a model?</h4>
-              <p style="font-size:0.75rem; color:var(--text-secondary);">
-                Run the pull command on your worker host terminal. The list will update automatically.
-              </p>
-            </div>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <code style="background:#000; padding:6px 12px; border-radius:4px; font-size:0.8rem; border:1px solid var(--border)">ollama pull tinyllama</code>
-              <button class="btn" style="padding:6px 12px; font-size:0.8rem;" onclick="navigator.clipboard.writeText('ollama pull tinyllama'); showToast('Command copied to clipboard!', 'info')">
-                <i data-lucide="copy" style="width:14px; height:14px;"></i> Copy
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="card">
-        <h3><i data-lucide="network"></i> Supported Backend Integrations</h3>
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
-          <div style="padding:16px; background:rgba(255,255,255,0.01); border:1px solid var(--border); border-radius:var(--radius-sm)">
-            <h4 style="font-size:0.9rem; margin-bottom:4px; font-weight:600; display:flex; align-items:center; gap:8px;"><span style="width:6px; height:6px; border-radius:50%; background:var(--success)"></span> Ollama</h4>
-            <p style="font-size:0.75rem; color:var(--text-secondary)">Local inference. The default provider. Auto-discovers installed models.</p>
-          </div>
-          <div style="padding:16px; background:rgba(255,255,255,0.01); border:1px solid var(--border); border-radius:var(--radius-sm)">
-            <h4 style="font-size:0.9rem; margin-bottom:4px; font-weight:600; display:flex; align-items:center; gap:8px;"><span style="width:6px; height:6px; border-radius:50%; background:#a855f7"></span> Cluster (Distributed)</h4>
-            <p style="font-size:0.75rem; color:var(--text-secondary)">Pool VRAM across machines via Tailscale. Uses llama.cpp RPC to run models collaboratively.</p>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- ────────────────── PANEL 5: SETTINGS ────────────────── -->
     <div id="panel-settings" class="panel">
 
       <div class="card">
-        <h3 style="margin-bottom:18px;"><i data-lucide="shield-check"></i> API Credentials</h3>
+        <h3 style="margin-bottom:18px;"><i data-lucide="settings"></i> Platform Configuration</h3>
 
         <div class="settings-notice">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
           <p>
-            <strong>Stored locally only.</strong> These keys are saved in your browser's <code>localStorage</code> and are <strong>never persisted on the server</strong>. They are injected only at the moment a job is dispatched, and only to the matching provider. Clearing your browser data will remove them.
+            Settings are saved in your browser's <code>localStorage</code> and persist across sessions.
+            These values are used by the dashboard when connecting to services.
           </p>
         </div>
 
-        <div class="settings-notice" style="margin-bottom:18px;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-          <p>
-            Younify uses <strong>Ollama</strong> for local inference. No API keys needed.
-            Install Ollama from <a href="https://ollama.com" target="_blank" rel="noopener" style="color:var(--accent)">ollama.com</a>
-            and pull a model to get started.
-          </p>
+        <form id="settings-form" onsubmit="saveSettings(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="setting-ollama-url">Ollama Base URL</label>
+              <input type="text" id="setting-ollama-url" placeholder="http://localhost:11434">
+            </div>
+            <div class="form-group">
+              <label for="setting-coordinator-url">Coordinator URL</label>
+              <input type="text" id="setting-coordinator-url" placeholder="http://localhost:8050">
+            </div>
+          </div>
+
+          <div style="display:flex; gap:12px; margin-top:8px;">
+            <button type="submit" class="btn btn-primary">
+              <i data-lucide="save"></i> Save Settings
+            </button>
+            <button type="button" class="btn" onclick="resetSettings()">
+              <i data-lucide="rotate-ccw"></i> Reset to Defaults
+            </button>
+          </div>
+        </form>
+
+        <div id="settings-saved-msg" style="display:none; margin-top:16px; padding:10px 14px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:var(--radius-sm); color:var(--success); font-size:0.85rem;">
+          <i data-lucide="check-circle" style="width:14px; height:14px; vertical-align:middle; margin-right:6px;"></i>
+          Settings saved successfully.
         </div>
       </div>
 
@@ -1674,40 +1834,57 @@ DASHBOARD_HTML = """\
     <div id="panel-chat" class="panel">
       <div class="chat-layout">
 
-        <!-- Toolbar: model selector + params -->
-        <div class="chat-toolbar">
-          <label for="chat-provider-select">Provider</label>
-          <select id="chat-provider-select" onchange="chatProviderChange()">
-            <option value="ollama">Ollama</option>
-          </select>
-
-          <label for="chat-model-select">Model</label>
-          <select id="chat-model-select">
-            <option value="">— loading —</option>
-          </select>
-
-          <button class="chat-clear-btn" onclick="clearChat()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-            Clear chat
-          </button>
-        </div>
-
-        <!-- Messages container -->
-        <div class="chat-messages" id="chat-messages">
-          <div class="chat-empty-state" id="chat-empty">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            <h4>Start a conversation</h4>
-            <p>Select a model above and type your message below.</p>
+        <!-- Conversation Sidebar -->
+        <div class="conv-sidebar">
+          <div class="conv-header">
+            <span>Conversations</span>
+            <button class="conv-new-btn" onclick="newConversation()" title="New conversation">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New
+            </button>
           </div>
+          <div class="conv-list" id="conv-list"></div>
         </div>
 
-        <!-- Input bar -->
-        <div class="chat-input-bar">
-          <textarea id="chat-input" rows="1" placeholder="Type a message… (Shift+Enter for new line, Enter to send)"
-                    onkeydown="chatKeyHandler(event)" oninput="autoResizeChatInput(this)"></textarea>
-          <button id="chat-send-btn" onclick="sendChatMessage()" title="Send message">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          </button>
+        <!-- Chat Main Area -->
+        <div class="chat-main">
+
+          <!-- Toolbar: model selector + params -->
+          <div class="chat-toolbar">
+            <label for="chat-provider-select">Provider</label>
+            <select id="chat-provider-select" onchange="chatProviderChange()">
+              <option value="ollama">Ollama</option>
+            </select>
+
+            <label for="chat-model-select">Model</label>
+            <select id="chat-model-select">
+              <option value="">— loading —</option>
+            </select>
+
+            <button class="chat-clear-btn" onclick="clearChat()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              Clear chat
+            </button>
+          </div>
+
+          <!-- Messages container -->
+          <div class="chat-messages" id="chat-messages">
+            <div class="chat-empty-state" id="chat-empty">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <h4>Start a conversation</h4>
+              <p>Select a model above and type your message below.</p>
+            </div>
+          </div>
+
+          <!-- Input bar -->
+          <div class="chat-input-bar">
+            <textarea id="chat-input" rows="1" placeholder="Type a message… (Shift+Enter for new line, Enter to send)"
+                      onkeydown="chatKeyHandler(event)" oninput="autoResizeChatInput(this)"></textarea>
+            <button id="chat-send-btn" onclick="sendChatMessage()" title="Send message">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+
         </div>
 
       </div>
@@ -1751,6 +1928,11 @@ DASHBOARD_HTML = """\
       <div class="detail-group">
         <span class="detail-label">Model Inference Output</span>
         <div class="detail-value detail-value-pre" id="drawer-completion">—</div>
+      </div>
+
+      <div class="detail-group" id="drawer-logs-group" style="display:none;">
+        <span class="detail-label">Worker Logs</span>
+        <div class="detail-value detail-value-pre" id="drawer-logs" style="max-height:200px; font-size:0.75rem;"></div>
       </div>
 
       <div class="performance-grid">
@@ -1858,9 +2040,9 @@ DASHBOARD_HTML = """\
         viewSubtitle.innerText = "View connected hardware and network nodes";
         renderClusterTopology();
       } else if (tabId === 'settings') {
-        viewTitle.innerText = "API Credentials Settings";
-        viewSubtitle.innerText = "Manage security keys stored locally on your device";
-        loadApiKeysForm();
+        viewTitle.innerText = "Platform Settings";
+        viewSubtitle.innerText = "Configure connection URLs and platform preferences";
+        loadSettings();
       } else if (tabId === 'chat') {
         viewTitle.innerText = "Chat";
         viewSubtitle.innerText = "Converse with any connected model in real-time";
@@ -1946,6 +2128,7 @@ DASHBOARD_HTML = """\
               jobs[job.job_id].status = data.status;
               jobs[job.job_id].result = data.result;
               jobs[job.job_id].error = data.error;
+              jobs[job.job_id].logs = data.logs;
               jobs[job.job_id].started = data.started;
               jobs[job.job_id].completed = data.completed;
               changed = true;
@@ -1997,6 +2180,7 @@ DASHBOARD_HTML = """\
             jobs[key].status = data.status;
             jobs[key].result = data.result;
             jobs[key].error = data.error;
+            jobs[key].logs = data.logs;
             jobs[key].started = data.started;
             jobs[key].completed = data.completed;
             updated++;
@@ -2198,6 +2382,20 @@ DASHBOARD_HTML = """\
       
       // Load raw json
       document.getElementById('drawer-raw-json').innerText = JSON.stringify(job, null, 2);
+
+      // Load logs
+      const logsGroup = document.getElementById('drawer-logs-group');
+      const logsContainer = document.getElementById('drawer-logs');
+      if (job.logs && job.logs.length > 0) {
+        logsGroup.style.display = 'block';
+        logsContainer.innerHTML = job.logs.map(line => {
+          const cls = line.includes('FAILED') || line.includes('Error') ? 'error' :
+                     line.includes('WARN') ? 'warn' : '';
+          return `<div class="log-line${cls ? ' ' + cls : ''}">${esc(line)}</div>`;
+        }).join('');
+      } else {
+        logsGroup.style.display = 'none';
+      }
     }
 
     function closeInspectDrawer() {
@@ -2221,29 +2419,6 @@ DASHBOARD_HTML = """\
     async function renderClusterTopology() {
       checkClusterHealth();
       updateCoordinatorStatus();
-      
-      // Fetch models tag container
-      const modelsContainer = document.getElementById('cluster-installed-models');
-      try {
-        const response = await fetch(API + '/models');
-        if (response.ok) {
-          const data = await response.json();
-          const ollamaModels = data.ollama || [];
-          
-          if (ollamaModels.length === 0) {
-            modelsContainer.innerHTML = `<span style="color:var(--text-muted); font-size:0.85rem;">No local models loaded on host yet. Use 'ollama pull' command.</span>`;
-          } else {
-            modelsContainer.innerHTML = ollamaModels.map(modelName => `
-              <span class="node-tag" style="display:flex; align-items:center; gap:6px;">
-                <span class="status-dot active" style="width:6px; height:6px;"></span>
-                ${esc(modelName)}
-              </span>
-            `).join('');
-          }
-        }
-      } catch (e) {
-        modelsContainer.innerHTML = `<span style="color:var(--danger); font-size:0.85rem;">Unable to check registry.</span>`;
-      }
     }
 
     async function checkClusterHealth() {
@@ -2454,12 +2629,136 @@ DASHBOARD_HTML = """\
     }
 
     /* ── Chat Logic ─────────────────────────────────────────────────── */
-    let chatHistory = [];   // [{role, content, meta}]
+    let chatHistory = [];
     let chatBusy = false;
+    let chatConversations = [];
+    let activeConvId = null;
+    const CONV_STORAGE_KEY = 'younify_chat_conversations';
+
+    function saveConversations() {
+      localStorage.setItem(CONV_STORAGE_KEY, JSON.stringify(chatConversations));
+    }
+
+    function loadConversations() {
+      try {
+        const raw = localStorage.getItem(CONV_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch { return []; }
+    }
+
+    function renderConvList() {
+      const list = document.getElementById('conv-list');
+      if (chatConversations.length === 0) {
+        list.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:0.75rem;">No saved conversations</div>';
+        return;
+      }
+      list.innerHTML = chatConversations.map(c => `
+        <div class="conv-item${c.id === activeConvId ? ' active' : ''}" onclick="switchConversation('${c.id}')">
+          <span class="conv-item-title">${esc(c.title || 'Untitled')}</span>
+          <button class="conv-item-delete" onclick="event.stopPropagation();deleteConversation('${c.id}')" title="Delete">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function getActiveConversation() {
+      return chatConversations.find(c => c.id === activeConvId);
+    }
+
+    function saveActiveConversation() {
+      const conv = getActiveConversation();
+      if (!conv) return;
+      conv.messages = [...chatHistory];
+      conv.updatedAt = Date.now();
+      if (chatHistory.length > 0 && chatHistory[0].role === 'user') {
+        conv.title = chatHistory[0].content.slice(0, 60) + (chatHistory[0].content.length > 60 ? '...' : '');
+      }
+      saveConversations();
+      renderConvList();
+    }
+
+    function newConversation() {
+      saveActiveConversation();
+      const id = 'conv_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+      const conv = {
+        id,
+        title: 'New conversation',
+        modelId: document.getElementById('chat-model-select').value || 'ollama/llama3',
+        messages: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      chatConversations.unshift(conv);
+      activeConvId = id;
+      chatHistory = [];
+      saveConversations();
+      renderConvList();
+      renderChatHistory();
+      document.getElementById('chat-input').focus();
+    }
+
+    function switchConversation(id) {
+      saveActiveConversation();
+      const conv = chatConversations.find(c => c.id === id);
+      if (!conv) return;
+      activeConvId = id;
+      chatHistory = conv.messages ? [...conv.messages] : [];
+      renderConvList();
+      renderChatHistory();
+    }
+
+    function deleteConversation(id) {
+      chatConversations = chatConversations.filter(c => c.id !== id);
+      if (activeConvId === id) {
+        activeConvId = null;
+        chatHistory = [];
+        renderChatHistory();
+      }
+      saveConversations();
+      renderConvList();
+      showToast('Conversation deleted.', 'info');
+    }
+
+    function formatMessage(content) {
+      if (!content) return '';
+      let html = esc(content);
+      html = html.replace(/```(\\w*)\\n?([\\s\\S]*?)```/g, (_, lang, code) => {
+        const langAttr = lang ? ` class="language-${esc(lang)}"` : '';
+        return `<pre><button class="copy-code-btn" onclick="navigator.clipboard.writeText(this.parentNode.querySelector('code').textContent);showToast('Copied!','success')">Copy</button><code${langAttr}>${esc(code.trim())}</code></pre>`;
+      });
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      html = html.replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>');
+      html = html.replace(/\\n/g, '<br>');
+      return html;
+    }
 
     async function initChatPanel() {
+      chatConversations = loadConversations();
+      renderConvList();
       await chatFetchModels();
-      renderChatHistory();
+
+      if (chatConversations.length === 0 || activeConvId) {
+        if (!activeConvId && chatConversations.length > 0) {
+          activeConvId = chatConversations[0].id;
+        }
+      }
+
+      if (activeConvId) {
+        const conv = getActiveConversation();
+        if (conv) {
+          chatHistory = conv.messages ? [...conv.messages] : [];
+          renderConvList();
+        } else {
+          activeConvId = null;
+        }
+      }
+
+      if (chatConversations.length === 0) {
+        newConversation();
+      } else {
+        renderChatHistory();
+      }
     }
 
     async function chatFetchModels() {
@@ -2491,7 +2790,6 @@ DASHBOARD_HTML = """\
       const container = document.getElementById('chat-messages');
       const emptyState = document.getElementById('chat-empty');
 
-      // Clear all but the empty-state div
       [...container.children].forEach(el => {
         if (el.id !== 'chat-empty') el.remove();
       });
@@ -2524,10 +2822,12 @@ DASHBOARD_HTML = """\
         ? `${msg.meta.model || ''} · ${msg.meta.tokens || ''} tokens · ${msg.meta.duration || ''}`
         : '';
 
+      const formattedContent = isUser ? esc(msg.content) : formatMessage(msg.content);
+
       wrap.innerHTML = `
         <div class="chat-avatar ${isUser ? 'user-avatar' : 'model-avatar'}">${avatarInner}</div>
         <div>
-          <div class="chat-bubble ${isUser ? 'user' : (msg.role === 'error' ? 'error' : 'assistant')}">${esc(msg.content)}</div>
+          <div class="chat-bubble ${isUser ? 'user' : (msg.role === 'error' ? 'error' : 'assistant')}">${formattedContent}</div>
           ${metaText ? `<div class="chat-meta">${esc(metaText)}</div>` : ''}
         </div>`;
 
@@ -2577,6 +2877,8 @@ DASHBOARD_HTML = """\
 
     async function sendChatMessage() {
       if (chatBusy) return;
+      if (!getActiveConversation()) newConversation();
+
       const inputEl = document.getElementById('chat-input');
       const text = inputEl.value.trim();
       if (!text) return;
@@ -2590,16 +2892,13 @@ DASHBOARD_HTML = """\
       const maxTokens = 2048;
       const temperature = 0.7;
 
-      // Display user message immediately
       const userMsg = { role: 'user', content: text };
       chatHistory.push(userMsg);
       appendChatBubble(userMsg);
 
-      // Clear input
       inputEl.value = '';
       inputEl.style.height = 'auto';
 
-      // Lock UI
       chatBusy = true;
       document.getElementById('chat-send-btn').disabled = true;
       addTypingIndicator();
@@ -2620,7 +2919,6 @@ DASHBOARD_HTML = """\
         if (!resp.ok) throw new Error((await resp.json()).detail || 'Gateway error');
         const { job_id } = await resp.json();
 
-        // Poll until done
         const result = await pollChatJob(job_id);
         removeTypingIndicator();
 
@@ -2649,6 +2947,7 @@ DASHBOARD_HTML = """\
         chatBusy = false;
         document.getElementById('chat-send-btn').disabled = false;
         inputEl.focus();
+        saveActiveConversation();
       }
     }
 
@@ -2666,32 +2965,53 @@ DASHBOARD_HTML = """\
     }
 
     function clearChat() {
-      chatHistory = [];
-      renderChatHistory();
-      showToast('Chat cleared.', 'info');
+      if (getActiveConversation()) {
+        saveActiveConversation();
+      }
+      newConversation();
     }
 
     /* ── Settings Logic ────────────────────────────────────────────── */
-    function togglePw(inputId, btn) {
-      const input = document.getElementById(inputId);
-      const isHidden = input.type === 'password';
-      input.type = isHidden ? 'text' : 'password';
-      // Swap eye icon
-      btn.innerHTML = isHidden
-        ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
-        : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    const SETTINGS_KEYS = {
+      ollamaUrl: 'younify_ollama_url',
+      coordinatorUrl: 'younify_coordinator_url',
+    };
+    const SETTINGS_DEFAULTS = {
+      ollamaUrl: 'http://localhost:11434',
+      coordinatorUrl: 'http://localhost:8050',
+    };
+
+    function loadSettings() {
+      for (const [key, storageKey] of Object.entries(SETTINGS_KEYS)) {
+        const el = document.getElementById(`setting-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`);
+        if (el) {
+          el.value = localStorage.getItem(storageKey) || SETTINGS_DEFAULTS[key];
+        }
+      }
+      document.getElementById('settings-saved-msg').style.display = 'none';
     }
 
-    function loadApiKeysForm() {
+    function saveSettings(event) {
+      event.preventDefault();
+      for (const [key, storageKey] of Object.entries(SETTINGS_KEYS)) {
+        const el = document.getElementById(`setting-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`);
+        if (el) {
+          localStorage.setItem(storageKey, el.value.trim() || SETTINGS_DEFAULTS[key]);
+        }
+      }
+      const msg = document.getElementById('settings-saved-msg');
+      msg.style.display = 'block';
+      setTimeout(() => { msg.style.display = 'none'; }, 3000);
+      showToast('Settings saved.', 'success');
     }
 
-    function saveApiKeys(event) {
-      if (event) event.preventDefault();
-      showToast("No API keys needed — Younify uses Ollama.", "info");
-    }
-
-    function clearSettingsForm() {
-      showToast("Nothing to clear — Younify uses Ollama.", "info");
+    function resetSettings() {
+      for (const [key, storageKey] of Object.entries(SETTINGS_KEYS)) {
+        localStorage.removeItem(storageKey);
+        const el = document.getElementById(`setting-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`);
+        if (el) el.value = SETTINGS_DEFAULTS[key];
+      }
+      showToast('Settings reset to defaults.', 'info');
     }
 
     /* ── Utilities ────────────────────────────────────────────────── */
