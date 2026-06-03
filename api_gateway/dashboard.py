@@ -1448,6 +1448,31 @@ DASHBOARD_HTML = """\
       width: 0;
       height: 0;
     }
+
+    /* ── Worker list ────────────────────────────────────────────────── */
+    .worker-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      margin-bottom: 6px;
+    }
+    .worker-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .worker-dot.alive { background: var(--success); box-shadow: 0 0 6px var(--success); }
+    .worker-dot.stale { background: var(--warning); }
+    .worker-info { display: flex; flex-direction: column; }
+    .worker-host { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+    .worker-model { font-size: 0.75rem; color: var(--text-muted); }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; display: inline-block; }
   </style>
 </head>
 <body>
@@ -1736,20 +1761,21 @@ DASHBOARD_HTML = """\
                 <div class="node-role">Distributed Inference Orchestrator</div>
               </div>
             </div>
-            <span id="cluster-coord-badge" class="badge-status badge-QUEUED">CHECKING</span>
+            <span id="cluster-coord-badge" class="badge-status badge-QUEUED">IDLE</span>
           </div>
           <div class="node-info-list">
             <div class="node-info-item">
               <span>Coordinator Status</span>
-              <span id="cluster-coord-status">Checking...</span>
+              <span id="cluster-coord-status">Click Connect to scan</span>
             </div>
             <div class="node-info-item">
               <span>Cluster Workers</span>
               <span id="cluster-coord-workers">-</span>
             </div>
             <div class="node-info-item">
-              <span>RPC Nodes</span>
-              <span id="cluster-coord-rpc">-</span>
+              <button id="btn-scan-workers" class="btn btn-primary" style="width:100%;margin-top:8px;justify-content:center" onclick="scanWorkers()">
+                <i data-lucide="search"></i> Connect
+              </button>
             </div>
           </div>
         </div>
@@ -1765,7 +1791,7 @@ DASHBOARD_HTML = """\
                 <div class="node-role">Inference Nodes</div>
               </div>
             </div>
-            <span id="cluster-workers-badge" class="badge-status badge-COMPLETED">ACTIVE</span>
+            <span id="cluster-workers-badge" class="badge-status badge-QUEUED">IDLE</span>
           </div>
           <div class="node-info-list">
             <div class="node-info-item">
@@ -1774,11 +1800,12 @@ DASHBOARD_HTML = """\
             </div>
             <div class="node-info-item">
               <span>Workers Running</span>
-              <span>1 Node (Local Daemon)</span>
+              <span id="cluster-worker-count">Click Connect to scan</span>
             </div>
-            <div class="node-info-item">
-              <span>Node Hardware</span>
-              <span>CPU/GPU Parallelized</span>
+          </div>
+          <div id="cluster-worker-list" style="margin-top:12px">
+            <div style="color:var(--text-muted);font-size:0.85rem;padding:8px 0">
+              No workers scanned yet. Click Connect above.
             </div>
           </div>
         </div>
@@ -1803,11 +1830,7 @@ DASHBOARD_HTML = """\
         <form id="settings-form" onsubmit="saveSettings(event)">
           <div class="form-row">
             <div class="form-group">
-              <label for="setting-ollama-url">Ollama Base URL</label>
-              <input type="text" id="setting-ollama-url" placeholder="http://localhost:11434">
-            </div>
-            <div class="form-group">
-              <label for="setting-coordinator-url">Coordinator URL</label>
+              <label for="setting-coordinator-url">Coordinator URL (for cluster mode)</label>
               <input type="text" id="setting-coordinator-url" placeholder="http://localhost:8050">
             </div>
           </div>
@@ -1995,17 +2018,14 @@ DASHBOARD_HTML = """\
       
       // Start services
       checkClusterHealth();
-      
+
       // Initial stats & job list render
       updateDashboardStats();
       renderJobsHistory();
       initCharts();
-      
-      // Start polling status loop
+
+      // Start polling status loop (jobs only — cluster uses manual scan)
       startPollingLoop();
-      
-      // Periodic health check (every 5 seconds)
-      setInterval(checkClusterHealth, 5000);
     });
 
     /* ── Tab Navigation ────────────────────────────────────────────── */
@@ -2418,7 +2438,78 @@ DASHBOARD_HTML = """\
     /* ── Cluster Topology Renderer ────────────────────────────────── */
     async function renderClusterTopology() {
       checkClusterHealth();
-      updateCoordinatorStatus();
+      // Don't auto-scan workers — user must click "Connect" button
+      // to manually trigger a worker scan
+    }
+
+    async function scanWorkers() {
+      const btn = document.getElementById('btn-scan-workers');
+      const workerCount = document.getElementById('cluster-coord-workers');
+      const workerList = document.getElementById('cluster-worker-list');
+      const badge = document.getElementById('cluster-coord-badge');
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Scanning...';
+      }
+      if (badge) {
+        badge.className = 'badge-status badge-QUEUED';
+        badge.innerText = 'SCANNING';
+      }
+
+      try {
+        const resp = await fetch(API + '/cluster/workers');
+        if (resp.ok) {
+          const data = await resp.json();
+          const alive = data.alive_workers || 0;
+          const total = data.total_workers || 0;
+          const workers = data.workers || [];
+
+          if (workerCount) {
+            workerCount.innerText = `${alive} alive / ${total} total`;
+          }
+          if (badge) {
+            badge.className = alive > 0 ? 'badge-status badge-COMPLETED' : 'badge-status badge-QUEUED';
+            badge.innerText = alive > 0 ? 'ONLINE' : 'NO WORKERS';
+          }
+
+          // Render worker list
+          if (workerList) {
+            if (workers.length === 0) {
+              workerList.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;padding:8px 0">No workers found. Start a worker on another machine and click Connect.</div>';
+            } else {
+              workerList.innerHTML = workers.map(w => `
+                <div class="worker-item">
+                  <div class="worker-dot ${w.status === 'alive' ? 'alive' : 'stale'}"></div>
+                  <div class="worker-info">
+                    <div class="worker-host">${w.host || w.id}</div>
+                    <div class="worker-model">${w.model || 'unknown model'} · ${w.status}</div>
+                  </div>
+                </div>
+              `).join('');
+            }
+          }
+        } else {
+          if (badge) {
+            badge.className = 'badge-status badge-FAILED';
+            badge.innerText = 'ERROR';
+          }
+        }
+      } catch (e) {
+        if (badge) {
+          badge.className = 'badge-status badge-FAILED';
+          badge.innerText = 'UNREACHABLE';
+        }
+        if (workerList) {
+          workerList.innerHTML = '<div style="color:var(--danger);font-size:0.85rem">Failed to scan workers. Check API connectivity.</div>';
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i data-lucide="search"></i> Connect';
+          lucide.createIcons();
+        }
+      }
     }
 
     async function checkClusterHealth() {
@@ -2473,41 +2564,7 @@ DASHBOARD_HTML = """\
       }
     }
 
-    async function updateCoordinatorStatus() {
-      const coordBadge = document.getElementById('cluster-coord-badge');
-      const coordStatus = document.getElementById('cluster-coord-status');
-      const coordWorkers = document.getElementById('cluster-coord-workers');
-      const coordRpc = document.getElementById('cluster-coord-rpc');
-      try {
-        const resp = await fetch(API + '/cluster/status');
-        if (resp.ok) {
-          const data = await resp.json();
-          if (data.error) {
-            coordBadge.className = 'badge-status badge-FAILED';
-            coordBadge.innerText = 'OFFLINE';
-            coordStatus.innerText = 'Unreachable';
-            coordWorkers.innerText = '-';
-            coordRpc.innerText = '-';
-          } else {
-            coordBadge.className = 'badge-status badge-COMPLETED';
-            coordBadge.innerText = 'ONLINE';
-            coordStatus.innerText = data.alive_workers > 0 ? 'Active' : 'No Workers';
-            coordWorkers.innerText = `${data.alive_workers} / ${data.total_workers} alive`;
-            coordRpc.innerText = data.alive_workers > 0 ? `${data.alive_workers} node(s)` : 'None';
-          }
-        } else {
-          coordBadge.className = 'badge-status badge-FAILED';
-          coordBadge.innerText = 'OFFLINE';
-          coordStatus.innerText = 'Coordinator Down';
-        }
-      } catch (e) {
-        if (coordBadge) {
-          coordBadge.className = 'badge-status badge-FAILED';
-          coordBadge.innerText = 'OFFLINE';
-          coordStatus.innerText = 'Coordinator Unreachable';
-        }
-      }
-    }
+    // updateCoordinatorStatus removed — replaced by scanWorkers() triggered manually
 
     function setHealthStatusFailed() {
       const gwDot = document.getElementById('gateway-status-dot');
@@ -2907,7 +2964,7 @@ DASHBOARD_HTML = """\
         prompt: text,
         model_id: modelId,
         max_tokens: maxTokens,
-        temperature: temperature
+        temperature: temperature,
       };
 
       try {
@@ -2972,33 +3029,19 @@ DASHBOARD_HTML = """\
     }
 
     /* ── Settings Logic ────────────────────────────────────────────── */
-    const SETTINGS_KEYS = {
-      ollamaUrl: 'younify_ollama_url',
-      coordinatorUrl: 'younify_coordinator_url',
-    };
-    const SETTINGS_DEFAULTS = {
-      ollamaUrl: 'http://localhost:11434',
-      coordinatorUrl: 'http://localhost:8050',
-    };
+    const COORD_KEY = 'younify_coordinator_url';
+    const COORD_DEFAULT = 'http://localhost:8050';
 
     function loadSettings() {
-      for (const [key, storageKey] of Object.entries(SETTINGS_KEYS)) {
-        const el = document.getElementById(`setting-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`);
-        if (el) {
-          el.value = localStorage.getItem(storageKey) || SETTINGS_DEFAULTS[key];
-        }
-      }
+      const el = document.getElementById('setting-coordinator-url');
+      if (el) el.value = localStorage.getItem(COORD_KEY) || COORD_DEFAULT;
       document.getElementById('settings-saved-msg').style.display = 'none';
     }
 
     function saveSettings(event) {
       event.preventDefault();
-      for (const [key, storageKey] of Object.entries(SETTINGS_KEYS)) {
-        const el = document.getElementById(`setting-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`);
-        if (el) {
-          localStorage.setItem(storageKey, el.value.trim() || SETTINGS_DEFAULTS[key]);
-        }
-      }
+      const el = document.getElementById('setting-coordinator-url');
+      if (el) localStorage.setItem(COORD_KEY, el.value.trim() || COORD_DEFAULT);
       const msg = document.getElementById('settings-saved-msg');
       msg.style.display = 'block';
       setTimeout(() => { msg.style.display = 'none'; }, 3000);
@@ -3006,11 +3049,9 @@ DASHBOARD_HTML = """\
     }
 
     function resetSettings() {
-      for (const [key, storageKey] of Object.entries(SETTINGS_KEYS)) {
-        localStorage.removeItem(storageKey);
-        const el = document.getElementById(`setting-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`);
-        if (el) el.value = SETTINGS_DEFAULTS[key];
-      }
+      localStorage.removeItem(COORD_KEY);
+      const el = document.getElementById('setting-coordinator-url');
+      if (el) el.value = COORD_DEFAULT;
       showToast('Settings reset to defaults.', 'info');
     }
 

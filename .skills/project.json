@@ -1,0 +1,1348 @@
+{
+  "version": 1,
+  "defaultExportDir": ".skills/exports",
+  "pinnedSkills": [
+    "academic-journal-matcher",
+    "action-item-router",
+    "ad-creative-generator",
+    "advanced-math",
+    "analyze-data",
+    "anomaly-investigator",
+    "api-test-suite",
+    "apidocs",
+    "audio-cleanup-lab",
+    "audio-extract",
+    "banner-ad-suite",
+    "benchmark-finder",
+    "bio-sequence-tool",
+    "blog-topic-cluster",
+    "brand-style-guide",
+    "brand-voice-audit",
+    "budget-variance-analyzer",
+    "businessactivity",
+    "calendar-events",
+    "campaign-metric-brief",
+    "campaign-moodboard",
+    "caption-style-stylist",
+    "chemistry-calculator",
+    "churn-risk-notifier",
+    "citation-formatter",
+    "classroom-newsletter-kit",
+    "codefix",
+    "color-palette-harmonizer",
+    "commitpush",
+    "commitpushpr",
+    "competitor-ad-analyzer",
+    "compliance-copy-check",
+    "compliance-report-pack",
+    "compress-video",
+    "consolelog",
+    "contract-plainlanguage",
+    "convert",
+    "copytone-translator",
+    "create-ebook",
+    "crm-note-enhancer",
+    "customer-journey-mapper",
+    "dashboard-builder",
+    "dashboard-narrator",
+    "data-anonymizer",
+    "database-explorer",
+    "dataset-health-check",
+    "decision-journal",
+    "delegation-brief-writer",
+    "deploy",
+    "destination-briefing",
+    "diff-viewer",
+    "doc-generate",
+    "doc-read",
+    "domainpurchase",
+    "domainsearch",
+    "educational-resource-finder",
+    "email-campaign",
+    "exam-readiness-check",
+    "excel",
+    "experiment-power-calculator",
+    "extract",
+    "extract-frames",
+    "extract-invoice",
+    "family-activity-curator",
+    "faq-packager",
+    "feedback-survey-designer",
+    "field-trip-planner",
+    "file-organizer",
+    "folder-tree",
+    "forecast-scenario-lab",
+    "form-filler",
+    "generate-api-client",
+    "generate-chart",
+    "generate-diagram",
+    "generate-dockerfile",
+    "generate-documentation",
+    "generate-env",
+    "generate-favicon",
+    "generate-mock-data",
+    "generate-pr-description",
+    "generate-presentation",
+    "generate-qrcode",
+    "generate-regex",
+    "generate-resume",
+    "generate-sitemap",
+    "generate-social-posts",
+    "generate-sql",
+    "gif-maker",
+    "github-manager",
+    "gmail",
+    "goal-quarterly-roadmap",
+    "grant-application-drafter",
+    "grocery-basket-optimizer",
+    "guest-communication-suite",
+    "habit-reflection-digest",
+    "highlight-reel-generator",
+    "homework-feedback-coach",
+    "household-maintenance-mgr",
+    "http-server",
+    "icon-pack",
+    "implementation",
+    "implementation-agent",
+    "implementation-plan",
+    "implementation-todo",
+    "inbox-priority-planner",
+    "invoice",
+    "invoice-dispute-helper",
+    "itinerary-architect",
+    "kpi-digest-generator",
+    "lab-notebook-formatter",
+    "landing-page-copy",
+    "latex-table-generator",
+    "learning-style-profiler",
+    "lesson-plan-customizer",
+    "livestream-runofshow",
+    "longform-structurer",
+    "lorem-generator",
+    "managemcp",
+    "markdown-validator",
+    "mcp-builder",
+    "meal-plan-designer",
+    "meeting-insight-summarizer",
+    "merge-pdfs",
+    "microcopy-generator",
+    "mindfulness-prompt-cache",
+    "monitor",
+    "notion-manager",
+    "npmpublish",
+    "onboarding-sequence-builder",
+    "onsite-ops-checklist",
+    "outreach-cadence-designer",
+    "packaging-concept-studio",
+    "packing-plan-pro",
+    "parent-teacher-brief",
+    "partner-kit-assembler",
+    "payroll-change-prepper",
+    "pdf-generate",
+    "persona-based-adwriter",
+    "persona-generator",
+    "personal-daily-ops",
+    "pet-care-scheduler",
+    "podcast-show-notes",
+    "presentation-theme-maker",
+    "press-release-drafter",
+    "print-collateral-designer",
+    "procurement-scorecard",
+    "product-demo-script",
+    "project-retro-companion",
+    "proposal-redline-advisor",
+    "read-csv",
+    "read-excel",
+    "read-image",
+    "regex-tester",
+    "risk-disclosure-kit",
+    "roi-comparison-tool",
+    "sales-call-recapper",
+    "salescopy",
+    "scaffold-project",
+    "scancommitpr",
+    "scancommitpush",
+    "scholarship-tracker",
+    "scientific-figure-check",
+    "seating-chart-maker",
+    "security-audit",
+    "seo-brief-builder",
+    "slack-assistant",
+    "sleep-routine-analyzer",
+    "sms",
+    "social-media-kit",
+    "split-pdf",
+    "sponsorship-proposal-lab",
+    "spreadsheet-cleanroom",
+    "statistical-test-selector",
+    "stress-relief-playbook",
+    "study-guide-builder",
+    "subscription-spend-watcher",
+    "survey-insight-extractor",
+    "terraform-generator",
+    "testimonial-graphics",
+    "timesheet",
+    "tmux-session",
+    "travel-budget-balancer",
+    "validate-config",
+    "video-cut-suggester",
+    "video-downloader",
+    "video-thumbnail",
+    "watermark",
+    "webinar-script-coach",
+    "wellness-progress-reporter",
+    "workout-cycle-planner",
+    "write"
+  ],
+  "pins": {
+    "academic-journal-matcher": {
+      "name": "academic-journal-matcher",
+      "pinnedAt": "2026-06-03T08:03:35.850Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "action-item-router": {
+      "name": "action-item-router",
+      "pinnedAt": "2026-06-03T08:03:35.828Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "ad-creative-generator": {
+      "name": "ad-creative-generator",
+      "pinnedAt": "2026-06-03T08:03:35.819Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "advanced-math": {
+      "name": "advanced-math",
+      "pinnedAt": "2026-06-03T08:03:35.851Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "analyze-data": {
+      "name": "analyze-data",
+      "pinnedAt": "2026-06-03T08:03:35.836Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "anomaly-investigator": {
+      "name": "anomaly-investigator",
+      "pinnedAt": "2026-06-03T08:03:35.836Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "api-test-suite": {
+      "name": "api-test-suite",
+      "pinnedAt": "2026-06-03T08:03:35.802Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "apidocs": {
+      "name": "apidocs",
+      "pinnedAt": "2026-06-03T08:03:35.803Z",
+      "version": "1.0.0",
+      "source": "official"
+    },
+    "audio-cleanup-lab": {
+      "name": "audio-cleanup-lab",
+      "pinnedAt": "2026-06-03T08:03:35.840Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "audio-extract": {
+      "name": "audio-extract",
+      "pinnedAt": "2026-06-03T07:55:20.168Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "banner-ad-suite": {
+      "name": "banner-ad-suite",
+      "pinnedAt": "2026-06-03T08:03:35.819Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "benchmark-finder": {
+      "name": "benchmark-finder",
+      "pinnedAt": "2026-06-03T08:03:35.837Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "bio-sequence-tool": {
+      "name": "bio-sequence-tool",
+      "pinnedAt": "2026-06-03T08:03:35.851Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "blog-topic-cluster": {
+      "name": "blog-topic-cluster",
+      "pinnedAt": "2026-06-03T08:03:35.847Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "brand-style-guide": {
+      "name": "brand-style-guide",
+      "pinnedAt": "2026-06-03T08:03:35.843Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "brand-voice-audit": {
+      "name": "brand-voice-audit",
+      "pinnedAt": "2026-06-03T08:03:35.844Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "budget-variance-analyzer": {
+      "name": "budget-variance-analyzer",
+      "pinnedAt": "2026-06-03T08:03:35.832Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "businessactivity": {
+      "name": "businessactivity",
+      "pinnedAt": "2026-06-03T08:03:35.829Z",
+      "version": "0.1.2",
+      "source": "official"
+    },
+    "calendar-events": {
+      "name": "calendar-events",
+      "pinnedAt": "2026-06-03T08:03:35.859Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "campaign-metric-brief": {
+      "name": "campaign-metric-brief",
+      "pinnedAt": "2026-06-03T08:03:35.819Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "campaign-moodboard": {
+      "name": "campaign-moodboard",
+      "pinnedAt": "2026-06-03T08:03:35.820Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "caption-style-stylist": {
+      "name": "caption-style-stylist",
+      "pinnedAt": "2026-06-03T08:03:35.820Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "chemistry-calculator": {
+      "name": "chemistry-calculator",
+      "pinnedAt": "2026-06-03T08:03:35.852Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "churn-risk-notifier": {
+      "name": "churn-risk-notifier",
+      "pinnedAt": "2026-06-03T08:03:35.820Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "citation-formatter": {
+      "name": "citation-formatter",
+      "pinnedAt": "2026-06-03T08:03:35.852Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "classroom-newsletter-kit": {
+      "name": "classroom-newsletter-kit",
+      "pinnedAt": "2026-06-03T08:03:35.855Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "codefix": {
+      "name": "codefix",
+      "pinnedAt": "2026-06-03T08:03:35.803Z",
+      "version": "1.0.0",
+      "source": "official"
+    },
+    "color-palette-harmonizer": {
+      "name": "color-palette-harmonizer",
+      "pinnedAt": "2026-06-03T08:03:35.844Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "commitpush": {
+      "name": "commitpush",
+      "pinnedAt": "2026-06-03T08:03:35.803Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "commitpushpr": {
+      "name": "commitpushpr",
+      "pinnedAt": "2026-06-03T08:03:35.803Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "competitor-ad-analyzer": {
+      "name": "competitor-ad-analyzer",
+      "pinnedAt": "2026-06-03T08:03:35.820Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "compliance-copy-check": {
+      "name": "compliance-copy-check",
+      "pinnedAt": "2026-06-03T08:03:35.832Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "compliance-report-pack": {
+      "name": "compliance-report-pack",
+      "pinnedAt": "2026-06-03T08:03:35.832Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "compress-video": {
+      "name": "compress-video",
+      "pinnedAt": "2026-06-03T08:03:35.840Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "consolelog": {
+      "name": "consolelog",
+      "pinnedAt": "2026-06-03T08:03:35.803Z",
+      "version": "0.2.2",
+      "source": "official"
+    },
+    "contract-plainlanguage": {
+      "name": "contract-plainlanguage",
+      "pinnedAt": "2026-06-03T08:03:35.832Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "convert": {
+      "name": "convert",
+      "pinnedAt": "2026-06-03T07:55:20.168Z",
+      "version": "1.0.0",
+      "source": "official"
+    },
+    "copytone-translator": {
+      "name": "copytone-translator",
+      "pinnedAt": "2026-06-03T08:03:35.848Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "create-ebook": {
+      "name": "create-ebook",
+      "pinnedAt": "2026-06-03T08:03:35.848Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "crm-note-enhancer": {
+      "name": "crm-note-enhancer",
+      "pinnedAt": "2026-06-03T08:03:35.820Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "customer-journey-mapper": {
+      "name": "customer-journey-mapper",
+      "pinnedAt": "2026-06-03T08:03:35.820Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "dashboard-builder": {
+      "name": "dashboard-builder",
+      "pinnedAt": "2026-06-03T08:03:35.837Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "dashboard-narrator": {
+      "name": "dashboard-narrator",
+      "pinnedAt": "2026-06-03T08:03:35.837Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "data-anonymizer": {
+      "name": "data-anonymizer",
+      "pinnedAt": "2026-06-03T08:03:35.837Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "database-explorer": {
+      "name": "database-explorer",
+      "pinnedAt": "2026-06-03T08:03:35.803Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "dataset-health-check": {
+      "name": "dataset-health-check",
+      "pinnedAt": "2026-06-03T08:03:35.838Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "decision-journal": {
+      "name": "decision-journal",
+      "pinnedAt": "2026-06-03T08:03:35.824Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "delegation-brief-writer": {
+      "name": "delegation-brief-writer",
+      "pinnedAt": "2026-06-03T08:03:35.829Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "deploy": {
+      "name": "deploy",
+      "pinnedAt": "2026-06-03T08:03:35.803Z",
+      "version": "1.0.0",
+      "source": "official"
+    },
+    "destination-briefing": {
+      "name": "destination-briefing",
+      "pinnedAt": "2026-06-03T08:03:35.865Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "diff-viewer": {
+      "name": "diff-viewer",
+      "pinnedAt": "2026-06-03T08:03:35.803Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "doc-generate": {
+      "name": "doc-generate",
+      "pinnedAt": "2026-06-03T07:55:20.155Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "doc-read": {
+      "name": "doc-read",
+      "pinnedAt": "2026-06-03T07:55:20.168Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "domainpurchase": {
+      "name": "domainpurchase",
+      "pinnedAt": "2026-06-03T08:03:35.847Z",
+      "version": "0.1.3",
+      "source": "official"
+    },
+    "domainsearch": {
+      "name": "domainsearch",
+      "pinnedAt": "2026-06-03T08:03:35.847Z",
+      "version": "0.1.2",
+      "source": "official"
+    },
+    "educational-resource-finder": {
+      "name": "educational-resource-finder",
+      "pinnedAt": "2026-06-03T08:03:35.855Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "email-campaign": {
+      "name": "email-campaign",
+      "pinnedAt": "2026-06-03T08:03:35.821Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "exam-readiness-check": {
+      "name": "exam-readiness-check",
+      "pinnedAt": "2026-06-03T08:03:35.856Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "excel": {
+      "name": "excel",
+      "pinnedAt": "2026-06-03T07:55:20.167Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "experiment-power-calculator": {
+      "name": "experiment-power-calculator",
+      "pinnedAt": "2026-06-03T08:03:35.853Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "extract": {
+      "name": "extract",
+      "pinnedAt": "2026-06-03T08:03:35.838Z",
+      "version": "1.0.0",
+      "source": "official"
+    },
+    "extract-frames": {
+      "name": "extract-frames",
+      "pinnedAt": "2026-06-03T08:03:35.840Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "extract-invoice": {
+      "name": "extract-invoice",
+      "pinnedAt": "2026-06-03T08:03:35.833Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "family-activity-curator": {
+      "name": "family-activity-curator",
+      "pinnedAt": "2026-06-03T08:03:35.866Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "faq-packager": {
+      "name": "faq-packager",
+      "pinnedAt": "2026-06-03T08:03:35.849Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "feedback-survey-designer": {
+      "name": "feedback-survey-designer",
+      "pinnedAt": "2026-06-03T08:03:35.821Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "field-trip-planner": {
+      "name": "field-trip-planner",
+      "pinnedAt": "2026-06-03T08:03:35.856Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "file-organizer": {
+      "name": "file-organizer",
+      "pinnedAt": "2026-06-03T08:03:35.824Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "folder-tree": {
+      "name": "folder-tree",
+      "pinnedAt": "2026-06-03T08:03:35.824Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "forecast-scenario-lab": {
+      "name": "forecast-scenario-lab",
+      "pinnedAt": "2026-06-03T08:03:35.833Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "form-filler": {
+      "name": "form-filler",
+      "pinnedAt": "2026-06-03T08:03:35.824Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "generate-api-client": {
+      "name": "generate-api-client",
+      "pinnedAt": "2026-06-03T08:03:35.804Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "generate-chart": {
+      "name": "generate-chart",
+      "pinnedAt": "2026-06-03T08:03:35.838Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "generate-diagram": {
+      "name": "generate-diagram",
+      "pinnedAt": "2026-06-03T08:03:35.831Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "generate-dockerfile": {
+      "name": "generate-dockerfile",
+      "pinnedAt": "2026-06-03T08:03:35.804Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "generate-documentation": {
+      "name": "generate-documentation",
+      "pinnedAt": "2026-06-03T08:03:35.804Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "generate-env": {
+      "name": "generate-env",
+      "pinnedAt": "2026-06-03T08:03:35.804Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "generate-favicon": {
+      "name": "generate-favicon",
+      "pinnedAt": "2026-06-03T08:03:35.844Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "generate-mock-data": {
+      "name": "generate-mock-data",
+      "pinnedAt": "2026-06-03T08:03:35.804Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "generate-pr-description": {
+      "name": "generate-pr-description",
+      "pinnedAt": "2026-06-03T08:03:35.816Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "generate-presentation": {
+      "name": "generate-presentation",
+      "pinnedAt": "2026-06-03T08:03:35.831Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "generate-qrcode": {
+      "name": "generate-qrcode",
+      "pinnedAt": "2026-06-03T08:03:35.831Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "generate-regex": {
+      "name": "generate-regex",
+      "pinnedAt": "2026-06-03T08:03:35.816Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "generate-resume": {
+      "name": "generate-resume",
+      "pinnedAt": "2026-06-03T08:03:35.831Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "generate-sitemap": {
+      "name": "generate-sitemap",
+      "pinnedAt": "2026-06-03T08:03:35.817Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "generate-social-posts": {
+      "name": "generate-social-posts",
+      "pinnedAt": "2026-06-03T08:03:35.821Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "generate-sql": {
+      "name": "generate-sql",
+      "pinnedAt": "2026-06-03T08:03:35.817Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "gif-maker": {
+      "name": "gif-maker",
+      "pinnedAt": "2026-06-03T08:03:35.841Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "github-manager": {
+      "name": "github-manager",
+      "pinnedAt": "2026-06-03T08:03:35.817Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "gmail": {
+      "name": "gmail",
+      "pinnedAt": "2026-06-03T08:03:35.860Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "goal-quarterly-roadmap": {
+      "name": "goal-quarterly-roadmap",
+      "pinnedAt": "2026-06-03T08:03:35.829Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "grant-application-drafter": {
+      "name": "grant-application-drafter",
+      "pinnedAt": "2026-06-03T08:03:35.833Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "grocery-basket-optimizer": {
+      "name": "grocery-basket-optimizer",
+      "pinnedAt": "2026-06-03T08:03:35.861Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "guest-communication-suite": {
+      "name": "guest-communication-suite",
+      "pinnedAt": "2026-06-03T08:03:35.871Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "habit-reflection-digest": {
+      "name": "habit-reflection-digest",
+      "pinnedAt": "2026-06-03T08:03:35.862Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "highlight-reel-generator": {
+      "name": "highlight-reel-generator",
+      "pinnedAt": "2026-06-03T08:03:35.841Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "homework-feedback-coach": {
+      "name": "homework-feedback-coach",
+      "pinnedAt": "2026-06-03T08:03:35.857Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "household-maintenance-mgr": {
+      "name": "household-maintenance-mgr",
+      "pinnedAt": "2026-06-03T08:03:35.866Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "http-server": {
+      "name": "http-server",
+      "pinnedAt": "2026-06-03T08:03:35.817Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "icon-pack": {
+      "name": "icon-pack",
+      "pinnedAt": "2026-06-03T08:03:35.843Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "implementation": {
+      "name": "implementation",
+      "pinnedAt": "2026-06-03T08:03:35.829Z",
+      "version": "1.0.0",
+      "source": "official"
+    },
+    "implementation-agent": {
+      "name": "implementation-agent",
+      "pinnedAt": "2026-06-03T08:03:35.829Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "implementation-plan": {
+      "name": "implementation-plan",
+      "pinnedAt": "2026-06-03T08:03:35.830Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "implementation-todo": {
+      "name": "implementation-todo",
+      "pinnedAt": "2026-06-03T08:03:35.830Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "inbox-priority-planner": {
+      "name": "inbox-priority-planner",
+      "pinnedAt": "2026-06-03T08:03:35.824Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "invoice": {
+      "name": "invoice",
+      "pinnedAt": "2026-06-03T08:03:35.834Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "invoice-dispute-helper": {
+      "name": "invoice-dispute-helper",
+      "pinnedAt": "2026-06-03T08:03:35.834Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "itinerary-architect": {
+      "name": "itinerary-architect",
+      "pinnedAt": "2026-06-03T08:03:35.867Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "kpi-digest-generator": {
+      "name": "kpi-digest-generator",
+      "pinnedAt": "2026-06-03T08:03:35.838Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "lab-notebook-formatter": {
+      "name": "lab-notebook-formatter",
+      "pinnedAt": "2026-06-03T08:03:35.853Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "landing-page-copy": {
+      "name": "landing-page-copy",
+      "pinnedAt": "2026-06-03T08:03:35.821Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "latex-table-generator": {
+      "name": "latex-table-generator",
+      "pinnedAt": "2026-06-03T08:03:35.854Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "learning-style-profiler": {
+      "name": "learning-style-profiler",
+      "pinnedAt": "2026-06-03T08:03:35.857Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "lesson-plan-customizer": {
+      "name": "lesson-plan-customizer",
+      "pinnedAt": "2026-06-03T08:03:35.858Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "livestream-runofshow": {
+      "name": "livestream-runofshow",
+      "pinnedAt": "2026-06-03T08:03:35.872Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "longform-structurer": {
+      "name": "longform-structurer",
+      "pinnedAt": "2026-06-03T08:03:35.849Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "lorem-generator": {
+      "name": "lorem-generator",
+      "pinnedAt": "2026-06-03T08:03:35.817Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "managemcp": {
+      "name": "managemcp",
+      "pinnedAt": "2026-06-03T08:03:35.817Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "markdown-validator": {
+      "name": "markdown-validator",
+      "pinnedAt": "2026-06-03T08:03:35.817Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "mcp-builder": {
+      "name": "mcp-builder",
+      "pinnedAt": "2026-06-03T08:03:35.817Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "meal-plan-designer": {
+      "name": "meal-plan-designer",
+      "pinnedAt": "2026-06-03T08:03:35.862Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "meeting-insight-summarizer": {
+      "name": "meeting-insight-summarizer",
+      "pinnedAt": "2026-06-03T08:03:35.825Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "merge-pdfs": {
+      "name": "merge-pdfs",
+      "pinnedAt": "2026-06-03T08:03:35.828Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "microcopy-generator": {
+      "name": "microcopy-generator",
+      "pinnedAt": "2026-06-03T08:03:35.845Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "mindfulness-prompt-cache": {
+      "name": "mindfulness-prompt-cache",
+      "pinnedAt": "2026-06-03T08:03:35.863Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "monitor": {
+      "name": "monitor",
+      "pinnedAt": "2026-06-03T08:03:35.818Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "notion-manager": {
+      "name": "notion-manager",
+      "pinnedAt": "2026-06-03T08:03:35.828Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "npmpublish": {
+      "name": "npmpublish",
+      "pinnedAt": "2026-06-03T08:03:35.818Z",
+      "version": "0.1.3",
+      "source": "official"
+    },
+    "onboarding-sequence-builder": {
+      "name": "onboarding-sequence-builder",
+      "pinnedAt": "2026-06-03T08:03:35.821Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "onsite-ops-checklist": {
+      "name": "onsite-ops-checklist",
+      "pinnedAt": "2026-06-03T08:03:35.872Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "outreach-cadence-designer": {
+      "name": "outreach-cadence-designer",
+      "pinnedAt": "2026-06-03T08:03:35.821Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "packaging-concept-studio": {
+      "name": "packaging-concept-studio",
+      "pinnedAt": "2026-06-03T08:03:35.845Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "packing-plan-pro": {
+      "name": "packing-plan-pro",
+      "pinnedAt": "2026-06-03T08:03:35.870Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "parent-teacher-brief": {
+      "name": "parent-teacher-brief",
+      "pinnedAt": "2026-06-03T08:03:35.858Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "partner-kit-assembler": {
+      "name": "partner-kit-assembler",
+      "pinnedAt": "2026-06-03T08:03:35.821Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "payroll-change-prepper": {
+      "name": "payroll-change-prepper",
+      "pinnedAt": "2026-06-03T08:03:35.834Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "pdf-generate": {
+      "name": "pdf-generate",
+      "pinnedAt": "2026-06-03T07:55:20.167Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "persona-based-adwriter": {
+      "name": "persona-based-adwriter",
+      "pinnedAt": "2026-06-03T08:03:35.822Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "persona-generator": {
+      "name": "persona-generator",
+      "pinnedAt": "2026-06-03T08:03:35.822Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "personal-daily-ops": {
+      "name": "personal-daily-ops",
+      "pinnedAt": "2026-06-03T08:03:35.828Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "pet-care-scheduler": {
+      "name": "pet-care-scheduler",
+      "pinnedAt": "2026-06-03T08:03:35.870Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "podcast-show-notes": {
+      "name": "podcast-show-notes",
+      "pinnedAt": "2026-06-03T08:03:35.849Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "presentation-theme-maker": {
+      "name": "presentation-theme-maker",
+      "pinnedAt": "2026-06-03T08:03:35.846Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "press-release-drafter": {
+      "name": "press-release-drafter",
+      "pinnedAt": "2026-06-03T08:03:35.850Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "print-collateral-designer": {
+      "name": "print-collateral-designer",
+      "pinnedAt": "2026-06-03T08:03:35.846Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "procurement-scorecard": {
+      "name": "procurement-scorecard",
+      "pinnedAt": "2026-06-03T08:03:35.834Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "product-demo-script": {
+      "name": "product-demo-script",
+      "pinnedAt": "2026-06-03T08:03:35.822Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "project-retro-companion": {
+      "name": "project-retro-companion",
+      "pinnedAt": "2026-06-03T08:03:35.830Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "proposal-redline-advisor": {
+      "name": "proposal-redline-advisor",
+      "pinnedAt": "2026-06-03T08:03:35.835Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "read-csv": {
+      "name": "read-csv",
+      "pinnedAt": "2026-06-03T07:55:20.168Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "read-excel": {
+      "name": "read-excel",
+      "pinnedAt": "2026-06-03T07:55:20.168Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "read-image": {
+      "name": "read-image",
+      "pinnedAt": "2026-06-03T07:55:20.168Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "regex-tester": {
+      "name": "regex-tester",
+      "pinnedAt": "2026-06-03T08:03:35.818Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "risk-disclosure-kit": {
+      "name": "risk-disclosure-kit",
+      "pinnedAt": "2026-06-03T08:03:35.835Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "roi-comparison-tool": {
+      "name": "roi-comparison-tool",
+      "pinnedAt": "2026-06-03T08:03:35.835Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "sales-call-recapper": {
+      "name": "sales-call-recapper",
+      "pinnedAt": "2026-06-03T08:03:35.822Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "salescopy": {
+      "name": "salescopy",
+      "pinnedAt": "2026-06-03T08:03:35.822Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "scaffold-project": {
+      "name": "scaffold-project",
+      "pinnedAt": "2026-06-03T08:03:35.818Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "scancommitpr": {
+      "name": "scancommitpr",
+      "pinnedAt": "2026-06-03T08:03:35.818Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "scancommitpush": {
+      "name": "scancommitpush",
+      "pinnedAt": "2026-06-03T08:03:35.818Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "scholarship-tracker": {
+      "name": "scholarship-tracker",
+      "pinnedAt": "2026-06-03T08:03:35.858Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "scientific-figure-check": {
+      "name": "scientific-figure-check",
+      "pinnedAt": "2026-06-03T08:03:35.854Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "seating-chart-maker": {
+      "name": "seating-chart-maker",
+      "pinnedAt": "2026-06-03T08:03:35.873Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "security-audit": {
+      "name": "security-audit",
+      "pinnedAt": "2026-06-03T08:03:35.818Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "seo-brief-builder": {
+      "name": "seo-brief-builder",
+      "pinnedAt": "2026-06-03T08:03:35.822Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "slack-assistant": {
+      "name": "slack-assistant",
+      "pinnedAt": "2026-06-03T08:03:35.860Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "sleep-routine-analyzer": {
+      "name": "sleep-routine-analyzer",
+      "pinnedAt": "2026-06-03T08:03:35.863Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "sms": {
+      "name": "sms",
+      "pinnedAt": "2026-06-03T08:03:35.861Z",
+      "version": "1.0.0",
+      "source": "official"
+    },
+    "social-media-kit": {
+      "name": "social-media-kit",
+      "pinnedAt": "2026-06-03T08:03:35.823Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "split-pdf": {
+      "name": "split-pdf",
+      "pinnedAt": "2026-06-03T08:03:35.828Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "sponsorship-proposal-lab": {
+      "name": "sponsorship-proposal-lab",
+      "pinnedAt": "2026-06-03T08:03:35.823Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "spreadsheet-cleanroom": {
+      "name": "spreadsheet-cleanroom",
+      "pinnedAt": "2026-06-03T08:03:35.839Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "statistical-test-selector": {
+      "name": "statistical-test-selector",
+      "pinnedAt": "2026-06-03T08:03:35.854Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "stress-relief-playbook": {
+      "name": "stress-relief-playbook",
+      "pinnedAt": "2026-06-03T08:03:35.864Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "study-guide-builder": {
+      "name": "study-guide-builder",
+      "pinnedAt": "2026-06-03T08:03:35.859Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "subscription-spend-watcher": {
+      "name": "subscription-spend-watcher",
+      "pinnedAt": "2026-06-03T08:03:35.835Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "survey-insight-extractor": {
+      "name": "survey-insight-extractor",
+      "pinnedAt": "2026-06-03T08:03:35.839Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "terraform-generator": {
+      "name": "terraform-generator",
+      "pinnedAt": "2026-06-03T08:03:35.818Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "testimonial-graphics": {
+      "name": "testimonial-graphics",
+      "pinnedAt": "2026-06-03T08:03:35.846Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "timesheet": {
+      "name": "timesheet",
+      "pinnedAt": "2026-06-03T08:03:35.836Z",
+      "version": "1.0.3",
+      "source": "official"
+    },
+    "tmux-session": {
+      "name": "tmux-session",
+      "pinnedAt": "2026-06-03T08:03:35.819Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "travel-budget-balancer": {
+      "name": "travel-budget-balancer",
+      "pinnedAt": "2026-06-03T08:03:35.871Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "validate-config": {
+      "name": "validate-config",
+      "pinnedAt": "2026-06-03T08:03:35.819Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "video-cut-suggester": {
+      "name": "video-cut-suggester",
+      "pinnedAt": "2026-06-03T08:03:35.841Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "video-downloader": {
+      "name": "video-downloader",
+      "pinnedAt": "2026-06-03T08:03:35.842Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "video-thumbnail": {
+      "name": "video-thumbnail",
+      "pinnedAt": "2026-06-03T08:03:35.842Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "watermark": {
+      "name": "watermark",
+      "pinnedAt": "2026-06-03T08:03:35.842Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "webinar-script-coach": {
+      "name": "webinar-script-coach",
+      "pinnedAt": "2026-06-03T08:03:35.823Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "wellness-progress-reporter": {
+      "name": "wellness-progress-reporter",
+      "pinnedAt": "2026-06-03T08:03:35.864Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "workout-cycle-planner": {
+      "name": "workout-cycle-planner",
+      "pinnedAt": "2026-06-03T08:03:35.865Z",
+      "version": "0.1.0",
+      "source": "official"
+    },
+    "write": {
+      "name": "write",
+      "pinnedAt": "2026-06-03T08:03:35.850Z",
+      "version": "1.0.0",
+      "source": "official"
+    }
+  },
+  "disabledSkills": [],
+  "createdAt": "2026-06-03T07:55:20.155Z",
+  "updatedAt": "2026-06-03T08:03:35.873Z"
+}

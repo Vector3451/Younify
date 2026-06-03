@@ -27,7 +27,9 @@ import json
 import time
 import sys
 import os
+import socket
 
+import requests
 import redis
 from redis.exceptions import ConnectionError as RedisConnectionError
 
@@ -41,6 +43,11 @@ REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
 REDIS_DB = int(os.environ.get("REDIS_DB", 0))
 TASK_QUEUE = "inference_tasks"
 RESULT_PREFIX = "inference_result:"
+
+# ---------------------------------------------------------------------------
+# Coordinator (for token reporting to cluster workers)
+# ---------------------------------------------------------------------------
+COORDINATOR_URL = os.environ.get("COORDINATOR_URL", "").rstrip("/")
 
 
 def connect_redis():
@@ -94,7 +101,8 @@ def process_task(r: redis.Redis, task: dict):
             api_key=task.get("api_key"),
         )
 
-        log(f"[WORKER] Job {job_id} -> COMPLETED ({result.get('completion_tokens', 0)} tokens)")
+        token_count = result.get('completion_tokens', 0)
+        log(f"[WORKER] Job {job_id} -> COMPLETED ({token_count} tokens)")
 
         r.set(f"{RESULT_PREFIX}{job_id}", json.dumps({
             "job_id": job_id,
@@ -105,6 +113,16 @@ def process_task(r: redis.Redis, task: dict):
             "started": time.time(),
             "completed": time.time(),
         }))
+
+        if COORDINATOR_URL and token_count > 0:
+            try:
+                requests.post(
+                    f"{COORDINATOR_URL}/api/v1/tokens/report",
+                    json={"label": socket.gethostname(), "tokens": token_count, "prompt": prompt},
+                    timeout=3,
+                )
+            except requests.RequestException:
+                pass
 
     except ValueError as e:
         error_msg = f"Configuration error: {e}"
@@ -138,20 +156,32 @@ def process_task(r: redis.Redis, task: dict):
 # Main loop
 # ---------------------------------------------------------------------------
 def main():
+    worker_id = f"{socket.gethostname()}-{os.getpid()}"
     print("=" * 60)
     print("  Distributed AI Inference Worker (Multi-Provider)")
     print("=" * 60)
     print(f"  Redis:    {REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}")
     print(f"  Queue:    {TASK_QUEUE}")
-    print(f"  Providers: ollama, cluster")
+    print(f"  Worker:   {worker_id}")
     print("=" * 60)
 
     r = None
+    last_heartbeat = 0
     while True:
         try:
             if r is None:
                 r = connect_redis()
                 print("[WORKER] Connected to Redis. Waiting for tasks...")
+
+            # Write heartbeat every 10 seconds
+            now = time.time()
+            if now - last_heartbeat >= 10:
+                r.setex(f"worker:heartbeat:{worker_id}", 30, json.dumps({
+                    "host": socket.gethostname(),
+                    "model": os.environ.get("OLLAMA_MODEL", "unknown"),
+                    "last_seen": now,
+                }))
+                last_heartbeat = now
 
             item = r.brpop(TASK_QUEUE, timeout=5)
             if item:
@@ -161,6 +191,12 @@ def main():
 
         except KeyboardInterrupt:
             print("\n[WORKER] Shutting down.")
+            # Clean up heartbeat on exit
+            try:
+                if r is not None:
+                    r.delete(f"worker:heartbeat:{worker_id}")
+            except Exception:
+                pass
             sys.exit(0)
         except RedisConnectionError as e:
             print(f"[WORKER] Redis connection lost: {e}. Retrying in 5s...")

@@ -129,14 +129,19 @@ if [[ "$MODE" == "worker" ]]; then
     $PY -m pip install --quiet redis requests 2>/dev/null || true
 
     # 5. Build llama-rpc-server if not found
-    if ! command -v llama-rpc-server &>/dev/null && [[ ! -f "./llama-rpc-server" ]]; then
+    if ! command -v llama-rpc-server &>/dev/null && ! command -v rpc-server &>/dev/null \
+        && [[ ! -f "./llama-rpc-server" ]] && [[ ! -f "./rpc-server" ]]; then
         warn "llama-rpc-server not found. Building from llama.cpp..."
         if [[ ! -d "llama.cpp" ]]; then
             git clone --depth 1 https://github.com/ggerganov/llama.cpp 2>/dev/null || true
         fi
         if [[ -d "llama.cpp" ]]; then
             cd llama.cpp && cmake -B build -DLLAMA_RPC=ON 2>/dev/null && cmake --build build --config Release -j 2>/dev/null && cd ..
-            cp llama.cpp/build/bin/llama-rpc-server ./ 2>/dev/null || true
+            if [[ -f "llama.cpp/build/bin/rpc-server" ]]; then
+                cp llama.cpp/build/bin/rpc-server ./ 2>/dev/null || true
+            else
+                cp llama.cpp/build/bin/llama-rpc-server ./ 2>/dev/null || true
+            fi
         fi
     fi
 
@@ -219,9 +224,29 @@ if [[ "$CLUSTER_MODE" == true ]]; then
     fi
 fi
 
-# ── Start Docker stack ───────────────────────────────────────────────────────
-info "Starting Docker stack (Redis + API Gateway)..."
-docker compose up -d --build redis api
+# ── Start Docker stack (Redis only) ─────────────────────────────────────────
+info "Starting Docker stack (Redis)..."
+# Stop any old API container that might hold port ${API_PORT}
+docker compose stop api 2>/dev/null || true
+docker compose up -d --build redis
+
+# ── Install deps & start API Gateway directly on host ─────────────────────
+PY=$(get_python)
+WORKER_PIDS=""
+if [[ -z "$PY" ]]; then error "Python3 not found."; exit 1; fi
+info "Installing Python deps for API gateway..."
+$PY -m pip install --quiet fastapi uvicorn pydantic redis requests 2>&1 | sed 's/^/  /' || true
+OLLAMA_URL="${OLLAMA_BASE_URL:-http://localhost:11434}"
+# Ensure port is free before starting
+if command -v lsof &>/dev/null && lsof -i ":${API_PORT}" &>/dev/null 2>&1; then
+    info "Port ${API_PORT} in use — attempting to free it..."
+    docker compose stop api 2>/dev/null || true
+    sleep 1
+fi
+info "Starting API Gateway on port ${API_PORT}..."
+REDIS_HOST=localhost OLLAMA_BASE_URL="$OLLAMA_URL" \
+  $PY -m uvicorn api_gateway.main:app --host 0.0.0.0 --port "$API_PORT" &
+GATEWAY_PID=$!; WORKER_PIDS="$WORKER_PIDS $GATEWAY_PID"
 
 # ── Wait for API ─────────────────────────────────────────────────────────────
 info "Waiting for API (http://localhost:${API_PORT})..."
@@ -230,7 +255,7 @@ for i in $(seq 1 30); do
         HEALTH=$(curl -sf "http://localhost:${API_PORT}/api/v1/health" 2>/dev/null)
         success "API is up: ${HEALTH}"; break
     fi
-    if [[ $i -eq 30 ]]; then error "API didn't start."; docker compose logs api; exit 1; fi
+    if [[ $i -eq 30 ]]; then error "API didn't start."; exit 1; fi
     sleep 1
 done
 
@@ -252,10 +277,8 @@ echo -e "  ${GREEN}╚═══════════════════�
 echo ""
 
 # ── Start coordinator (if --cluster) ────────────────────────────────────────
-PY=$(get_python)
-WORKER_PIDS=""
-
 if [[ "$CLUSTER_MODE" == true ]]; then
+    PY=$(get_python)
     if [[ -z "$PY" ]]; then error "Python3 not found."; exit 1; fi
 
     # Install deps for coordinator
@@ -296,7 +319,9 @@ if [[ "$HEAD_ONLY" != true ]] && [[ -n "$PY" ]]; then
 
     info "Starting ${NUM_WORKERS} local worker(s)..."
     for i in $(seq 1 "$NUM_WORKERS"); do
-        REDIS_HOST=localhost OLLAMA_BASE_URL="$OLLAMA_URL" $PY worker/worker.py &
+        REDIS_HOST=localhost OLLAMA_BASE_URL="$OLLAMA_URL" \
+            COORDINATOR_URL="${COORDINATOR_URL:-http://localhost:8050}" \
+            $PY worker/worker.py &
         WORKER_PIDS="${WORKER_PIDS} $!"
     done
     success "${NUM_WORKERS} worker(s) started."

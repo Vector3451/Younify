@@ -35,6 +35,8 @@ class WorkerRecord:
         self.last_heartbeat = time.time()
         self.layers_assigned = []
         self.status = "idle"
+        self.tokens_processed = 0
+        self._pending_reports: list[dict] = []
 
     def to_dict(self):
         return {
@@ -47,6 +49,7 @@ class WorkerRecord:
             "last_heartbeat": self.last_heartbeat,
             "layers_assigned": self.layers_assigned,
             "status": self.status,
+            "tokens_processed": self.tokens_processed,
         }
 
 
@@ -74,6 +77,18 @@ class Coordinator:
     def unregister_worker(self, worker_id: str):
         with self._lock:
             self.workers.pop(worker_id, None)
+
+    def record_inference(self, total_tokens: int):
+        with self._lock:
+            now = time.time()
+            alive = [w for w in self.workers.values()
+                     if now - w.last_heartbeat < WORKER_TIMEOUT]
+            if not alive:
+                return
+            per_worker = total_tokens // len(alive)
+            for w in alive:
+                w.tokens_processed += per_worker
+                w.status = "ready"
 
     def get_rpc_addrs(self) -> list[str]:
         with self._lock:
@@ -142,6 +157,12 @@ class HeartbeatRequest(BaseModel):
     worker_id: str
 
 
+class TokenReport(BaseModel):
+    label: str
+    tokens: int
+    prompt: str = ""
+
+
 @coordinator_app.post("/api/v1/workers/register")
 async def register(req: RegisterRequest):
     wid = coordinator.register_worker(req.host, req.port, req.vram_mb, req.ram_mb, req.label)
@@ -150,9 +171,26 @@ async def register(req: RegisterRequest):
 
 @coordinator_app.post("/api/v1/workers/heartbeat")
 async def worker_heartbeat(req: HeartbeatRequest):
-    if not coordinator.heartbeat(req.worker_id):
+    record = coordinator.workers.get(req.worker_id)
+    if not record:
         raise HTTPException(404, "Worker not found")
-    return {"status": "ok"}
+    coordinator.heartbeat(req.worker_id)
+    pending = []
+    if record._pending_reports:
+        pending = record._pending_reports
+        record._pending_reports = []
+    return {"status": "ok", "tokens_processed": record.tokens_processed, "reports": pending}
+
+
+@coordinator_app.post("/api/v1/tokens/report")
+async def report_tokens(req: TokenReport):
+    with coordinator._lock:
+        for w in coordinator.workers.values():
+            if req.label in (w.label, w.host, w.worker_id):
+                w.tokens_processed += req.tokens
+                w._pending_reports.append({"tokens": req.tokens, "prompt": req.prompt[:120]})
+                break
+    return {"status": "recorded"}
 
 
 @coordinator_app.delete("/api/v1/workers/{worker_id}")
@@ -195,7 +233,12 @@ async def generate(req: GenerateRequest):
     try:
         resp = requests.post(url, json=payload, timeout=600)
         resp.raise_for_status()
-        return resp.json()
+        data = resp.json()
+        usage = data.get("usage", {})
+        completion_tokens = usage.get("completion_tokens", 0)
+        if completion_tokens > 0:
+            coordinator.record_inference(completion_tokens)
+        return data
     except requests.ConnectionError:
         raise HTTPException(503, "llama-server is not running. Start it with cluster-llama-entrypoint.sh")
     except requests.Timeout:

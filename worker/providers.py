@@ -117,3 +117,7 @@ def run_inference(
         temperature=temperature,
         **kwargs,
     )
+
+
+# Import cluster_provider so it auto-registers with the registry
+import cluster_provider  # noqa: F401

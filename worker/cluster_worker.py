@@ -69,21 +69,39 @@ def get_system_memory():
 
 
 def find_llama_rpc_server():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
     candidates = [
+        os.path.join(script_dir, "..", "llama-rpc-server"),
+        os.path.join(script_dir, "..", "rpc-server"),
         "llama-rpc-server",
         "./llama-rpc-server",
+        "rpc-server",
+        "./rpc-server",
         os.path.expanduser("~/llama.cpp/build/bin/llama-rpc-server"),
+        os.path.expanduser("~/llama.cpp/build/bin/rpc-server"),
         "/usr/local/bin/llama-rpc-server",
+        "/usr/local/bin/rpc-server",
     ]
     for c in candidates:
         if os.path.isfile(c) and os.access(c, os.X_OK):
-            return c
+            return os.path.abspath(c)
         try:
             subprocess.run([c, "--help"], capture_output=True, timeout=5)
             return c
         except (FileNotFoundError, subprocess.TimeoutExpired):
             continue
     return None
+
+
+def log_resource_usage(prefix="[RESOURCES]"):
+    vram_mb, ram_mb = get_system_memory()
+    try:
+        import psutil
+        cpu = psutil.cpu_percent(interval=0.3)
+        ram_total = psutil.virtual_memory().total // (1024 * 1024)
+        print(f"{prefix} CPU: {cpu}% | RAM: {ram_mb} MB free / {ram_total} MB total | VRAM: {vram_mb} MB free")
+    except ImportError:
+        print(f"{prefix} RAM free: {ram_mb} MB | VRAM free: {vram_mb} MB")
 
 
 class ClusterWorker:
@@ -96,6 +114,7 @@ class ClusterWorker:
         self.worker_id = None
         self.rpc_process = None
         self._running = False
+        self._total_tokens = 0
 
     def start(self):
         hostname = socket.gethostname()
@@ -104,8 +123,9 @@ class ClusterWorker:
             cmd = [self.llama_rpc_bin, "--host", "0.0.0.0", "--port", str(self.rpc_port)]
             print(f"[CLUSTER] Starting: {' '.join(cmd)}")
             self.rpc_process = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
             )
+            threading.Thread(target=self._monitor_rpc_output, daemon=True).start()
             time.sleep(2)
         else:
             print(f"[CLUSTER] No llama-rpc-server binary found.")
@@ -136,22 +156,48 @@ class ClusterWorker:
         self._running = True
         threading.Thread(target=self._heartbeat_loop, daemon=True).start()
 
+        log_resource_usage()
         print(f"[CLUSTER] Running. PID: {os.getpid()}, RPC port: {self.rpc_port}")
 
+    def _monitor_rpc_output(self):
+        for line in iter(self.rpc_process.stdout.readline, b''):
+            if not line:
+                break
+            text = line.decode(errors="replace").rstrip()
+            print(f"  [rpc] {text}")
+
     def _heartbeat_loop(self):
+        resource_timer = 0
         while self._running:
             try:
-                requests.post(
+                resp = requests.post(
                     f"{self.coordinator_url}/api/v1/workers/heartbeat",
                     json={"worker_id": self.worker_id},
                     timeout=5,
                 )
+                if resp.ok:
+                    data = resp.json()
+                    self._total_tokens = data.get("tokens_processed", self._total_tokens)
+                    for report in data.get("reports", []):
+                        prompt = report.get("prompt", "")
+                        tokens = report.get("tokens", 0)
+                        prompt_short = prompt[:80] + "..." if len(prompt) > 80 else prompt
+                        print(f"[INFERENCE] +{tokens} tokens | Prompt: {prompt_short}")
             except requests.RequestException:
                 pass
+
+            resource_timer += HEARTBEAT_INTERVAL
+            if resource_timer >= 10:
+                resource_timer = 0
+                log_resource_usage()
+                status = "busy" if self._total_tokens > 0 else "idle"
+                print(f"[CLUSTER] Status: {status} | Total tokens contributed: {self._total_tokens}")
+
             time.sleep(HEARTBEAT_INTERVAL)
 
     def stop(self):
         self._running = False
+        print(f"[CLUSTER] Total tokens contributed this session: {self._total_tokens}")
         if self.worker_id:
             try:
                 requests.delete(

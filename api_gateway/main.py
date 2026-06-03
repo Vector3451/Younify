@@ -148,9 +148,9 @@ async def health_check():
 async def list_models():
     """Probe Ollama for available models. Returns empty list if Ollama is unreachable."""
     import requests as req
-    ollama_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+    base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
     try:
-        resp = req.get(f"{ollama_url}/api/tags", timeout=5)
+        resp = req.get(f"{base_url}/api/tags", timeout=5)
         if resp.status_code == 200:
             models = resp.json().get("models", [])
             return {"ollama": [m["name"] for m in models]}
@@ -254,6 +254,45 @@ async def cluster_status():
             "workers": [],
             "error": "Coordinator unreachable",
         }
+
+
+@app.get("/api/v1/cluster/workers", summary="Scan for active workers")
+async def cluster_workers():
+    """Scan Redis for active worker heartbeats and return live worker list."""
+    client = get_redis()
+    workers = []
+    now = time.time()
+
+    # Scan for worker heartbeat keys (pattern: worker:heartbeat:*)
+    cursor = 0
+    while True:
+        cursor, keys = client.scan(cursor, match="worker:heartbeat:*", count=100)
+        for key in keys:
+            try:
+                data = client.get(key)
+                if data:
+                    import json as _json
+                    info = _json.loads(data)
+                    last_seen = info.get("last_seen", 0)
+                    is_alive = (now - last_seen) < 30  # alive if seen in last 30s
+                    workers.append({
+                        "id": key.decode().split(":")[-1] if isinstance(key, bytes) else key.split(":")[-1],
+                        "host": info.get("host", "unknown"),
+                        "model": info.get("model", "unknown"),
+                        "status": "alive" if is_alive else "stale",
+                        "last_seen": last_seen,
+                    })
+            except Exception:
+                pass
+        if cursor == 0:
+            break
+
+    alive = [w for w in workers if w["status"] == "alive"]
+    return {
+        "total_workers": len(workers),
+        "alive_workers": len(alive),
+        "workers": workers,
+    }
 
 
 @app.get("/api/v1/cluster/rpc-addrs", summary="Cluster RPC addresses")
