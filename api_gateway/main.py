@@ -258,41 +258,18 @@ async def cluster_status():
 
 @app.get("/api/v1/cluster/workers", summary="Scan for active workers")
 async def cluster_workers():
-    """Scan Redis for active worker heartbeats and return live worker list."""
-    client = get_redis()
-    workers = []
-    now = time.time()
-
-    # Scan for worker heartbeat keys (pattern: worker:heartbeat:*)
-    cursor = 0
-    while True:
-        cursor, keys = client.scan(cursor, match="worker:heartbeat:*", count=100)
-        for key in keys:
-            try:
-                data = client.get(key)
-                if data:
-                    import json as _json
-                    info = _json.loads(data)
-                    last_seen = info.get("last_seen", 0)
-                    is_alive = (now - last_seen) < 30  # alive if seen in last 30s
-                    workers.append({
-                        "id": key.decode().split(":")[-1] if isinstance(key, bytes) else key.split(":")[-1],
-                        "host": info.get("host", "unknown"),
-                        "model": info.get("model", "unknown"),
-                        "status": "alive" if is_alive else "stale",
-                        "last_seen": last_seen,
-                    })
-            except Exception:
-                pass
-        if cursor == 0:
-            break
-
-    alive = [w for w in workers if w["status"] == "alive"]
-    return {
-        "total_workers": len(workers),
-        "alive_workers": len(alive),
-        "workers": workers,
-    }
+    """Proxy to coordinator for the cluster worker list."""
+    import requests as req
+    try:
+        resp = req.get(f"{COORDINATOR_URL}/api/v1/cluster/status", timeout=5)
+        return resp.json()
+    except Exception:
+        return {
+            "total_workers": 0,
+            "alive_workers": 0,
+            "workers": [],
+            "error": "Coordinator unreachable",
+        }
 
 
 @app.get("/api/v1/cluster/rpc-addrs", summary="Cluster RPC addresses")
@@ -304,6 +281,166 @@ async def cluster_rpc_addrs():
         return resp.json()
     except Exception:
         return {"addresses": [], "error": "Coordinator unreachable"}
+
+
+# ---------------------------------------------------------------------------
+# OpenAI-Compatible Endpoints (Hermes / Open WebUI / Continue.dev etc.)
+# ---------------------------------------------------------------------------
+# These endpoints match the OpenAI Chat Completions API format so that any
+# OpenAI-compatible client can use Younify as a drop-in provider.
+#
+# Flow:
+#   Hermes → api_gateway:3000/v1/chat/completions
+#     ├─ Coordinator available? → proxy to coordinator:8050/api/v1/generate
+#     └─ else → proxy to Ollama:11434/v1/chat/completions
+# ---------------------------------------------------------------------------
+
+
+class ChatCompletionRequest(BaseModel):
+    model: str = Field(..., description="Model ID, e.g. ollama/llama3 or cluster/my-model")
+    messages: list[dict] = Field(..., description="Array of message objects with role + content")
+    max_tokens: int = Field(2048, ge=1, description="Maximum tokens to generate")
+    temperature: float = Field(0.7, ge=0.0, le=2.0, description="Sampling temperature")
+    stream: bool = Field(False, description="Whether to stream the response")
+
+
+@app.post(
+    "/v1/chat/completions",
+    summary="OpenAI-compatible chat completions",
+    description="Accepts the standard OpenAI Chat Completions request body. Routes through the "
+    "Younify coordinator when available, otherwise falls back to Ollama.",
+)
+async def openai_chat_completions(req: ChatCompletionRequest):
+    """OpenAI-compatible chat completions endpoint.
+
+    Extracts the last user message from `messages`, then routes through:
+      1. Coordinator (cluster/distributed inference) if reachable
+      2. Ollama (local inference) as fallback
+    """
+    # Extract prompt from messages
+    prompt = ""
+    for msg in reversed(req.messages):
+        if msg.get("role") == "user":
+            content = msg.get("content", "")
+            if isinstance(content, list):
+                # Handle multi-part content (text + images etc.)
+                for part in content:
+                    if isinstance(part, dict) and part.get("type") == "text":
+                        prompt = part.get("text", "")
+                        break
+            else:
+                prompt = content or ""
+            break
+
+    if not prompt:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No user message found in messages array",
+        )
+
+    # Parse model ID → extract provider and model name
+    model_id = req.model
+    provider = "ollama"
+    model_name = model_id
+    if "/" in model_id:
+        provider, _, model_name = model_id.partition("/")
+
+    import requests as req_lib
+
+    # ── Try coordinator first ─────────────────────────────────────────────
+    if provider == "cluster" or COORDINATOR_URL:
+        coordinator_base = COORDINATOR_URL.rstrip("/")
+        try:
+            resp = req_lib.post(
+                f"{coordinator_base}/api/v1/generate",
+                json={
+                    "prompt": prompt,
+                    "model": model_name,
+                    "max_tokens": req.max_tokens,
+                    "temperature": req.temperature,
+                },
+                timeout=600,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            # Coordinator returns OpenAI-compatible format — patch model name
+            data["model"] = req.model
+            return data
+        except req_lib.ConnectionError:
+            # Coordinator unreachable — fall through to Ollama
+            pass
+        except req_lib.Timeout:
+            raise HTTPException(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                detail="Coordinator inference timed out",
+            )
+        except req_lib.RequestException as e:
+            # Don't fall through on non-connection errors — surface to caller
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Coordinator inference failed: {e}",
+            )
+
+    # ── Fallback: proxy to Ollama ─────────────────────────────────────────
+    ollama_base = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
+    try:
+        resp = req_lib.post(
+            f"{ollama_base}/v1/chat/completions",
+            json={
+                "model": model_name,
+                "messages": req.messages,
+                "max_tokens": req.max_tokens,
+                "temperature": req.temperature,
+                "stream": False,
+            },
+            timeout=300,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        data["model"] = req.model
+        return data
+    except req_lib.ConnectionError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Ollama is not running. Start it with: ollama serve",
+        )
+    except req_lib.Timeout:
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Ollama inference timed out",
+        )
+    except req_lib.RequestException as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Ollama inference failed: {e}",
+        )
+
+
+@app.get(
+    "/v1/models",
+    summary="OpenAI-compatible models list",
+    description="Returns available models in OpenAI format for client discovery.",
+)
+async def openai_list_models():
+    """List available models in OpenAI-compatible format."""
+    ollama_base = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
+    data_models = []
+    import requests as req_lib
+    try:
+        resp = req_lib.get(f"{ollama_base}/api/tags", timeout=5)
+        if resp.status_code == 200:
+            for m in resp.json().get("models", []):
+                name = m.get("name", "unknown")
+                data_models.append({
+                    "id": f"ollama/{name}",
+                    "object": "model",
+                    "created": int(time.time()),
+                    "owned_by": "ollama",
+                })
+    except Exception:
+        pass
+
+    return {"object": "list", "data": data_models}
 
 
 if __name__ == "__main__":

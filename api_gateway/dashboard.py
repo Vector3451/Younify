@@ -24,9 +24,6 @@ DASHBOARD_HTML = """\
   <!-- Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   
-  <!-- Charts.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
   <style>
     /* ── Design System & Variables ────────────────────────────────────── */
     :root {
@@ -994,77 +991,202 @@ DASHBOARD_HTML = """\
     }
 
     /* ── Cluster Topology Map ───────────────────────────────────────── */
-    .nodes-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
-    .node-card {
+    /* ── Cluster Summary Bar ────────────────────────────────────────── */
+    .cluster-summary {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
-      background: rgba(255, 255, 255, 0.02);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      position: relative;
+      padding: 16px 24px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
     }
-
-    .node-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .node-title-group {
+    .cluster-stat-item {
       display: flex;
       align-items: center;
       gap: 10px;
     }
-
-    .node-title-group i {
-      color: var(--accent);
-    }
-
-    .node-name {
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
-
-    .node-role {
-      font-size: 0.75rem;
-      color: var(--text-muted);
+    .cluster-stat-item .cluster-stat-label {
+      display: block;
+      font-size: 0.7rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+    .cluster-stat-item .cluster-stat-value {
+      display: block;
+      font-family: var(--font-title);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.2;
     }
 
-    .node-status-glow {
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 100px;
-      height: 100px;
-      background: radial-gradient(circle at 100% 0%, var(--accent-glow) 0%, transparent 70%);
-      pointer-events: none;
+    /* ── Infra Row ─────────────────────────────────────────────────── */
+    .cluster-infra-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
     }
-
-    .node-info-list {
+    @media (max-width: 800px) { .cluster-infra-row { grid-template-columns: 1fr; } }
+    .infra-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 12px;
+      transition: border-color var(--transition-speed) var(--ease);
+    }
+    .infra-card:hover { border-color: rgba(255,255,255,0.12); }
+    .infra-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .infra-card-header i {
+      width: 20px; height: 20px;
+      color: var(--accent);
+    }
+    .infra-card-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .infra-card-role {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .infra-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
       font-size: 0.8rem;
     }
-
-    .node-info-item {
+    .infra-row {
       display: flex;
       justify-content: space-between;
       color: var(--text-secondary);
     }
-
-    .node-info-item span:first-child {
+    .infra-row span:first-child {
       color: var(--text-muted);
+    }
+
+    /* ── Worker Nodes Section ──────────────────────────────────────── */
+    .cluster-workers-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+    }
+    .cluster-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .cluster-section-header h3 {
+      font-family: var(--font-title);
+      font-size: 1.05rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+    }
+
+    .wr-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(255,255,255,0.015);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      margin-bottom: 10px;
+      transition: border-color var(--transition-speed) var(--ease);
+    }
+    .wr-card:hover { border-color: var(--border-glow); }
+    .wr-card:last-child { margin-bottom: 0; }
+
+    .wr-status-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .wr-status-dot.alive { background: var(--success); box-shadow: 0 0 8px var(--success-glow); }
+    .wr-status-dot.dead  { background: var(--danger); box-shadow: 0 0 8px var(--danger-glow); }
+
+    .wr-icon {
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: rgba(99,102,241,0.1);
+      color: var(--accent);
+    }
+    .wr-icon i { width: 17px; height: 17px; }
+
+    .wr-body { flex: 1; min-width: 0; }
+    .wr-name {
+      font-weight: 600; font-size: 0.88rem;
+    }
+    .wr-host {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .wr-resources {
+      display: flex;
+      gap: 20px;
+      flex-shrink: 0;
+    }
+    .wr-res-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .wr-res-value {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .wr-res-label {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    .wr-tokens {
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .wr-tokens-value {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--warning);
+    }
+    .wr-tokens-label {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      display: block;
+      text-align: right;
     }
 
     .tag-container {
@@ -1498,11 +1620,7 @@ DASHBOARD_HTML = """\
       </a>
       
       <nav class="nav-menu">
-        <div id="nav-dashboard" class="nav-item active" onclick="switchTab('dashboard')" role="button" tabindex="0">
-          <i data-lucide="layout-dashboard"></i>
-          <span>Dashboard</span>
-        </div>
-        <div id="nav-chat" class="nav-item" onclick="switchTab('chat')" role="button" tabindex="0">
+        <div id="nav-chat" class="nav-item active" onclick="switchTab('chat')" role="button" tabindex="0">
           <i data-lucide="message-square"></i>
           <span>Chat</span>
         </div>
@@ -1514,10 +1632,7 @@ DASHBOARD_HTML = """\
           <i data-lucide="server"></i>
           <span>Cluster Topology</span>
         </div>
-        <div id="nav-settings" class="nav-item" onclick="switchTab('settings')" role="button" tabindex="0">
-          <i data-lucide="key-round"></i>
-          <span>Settings</span>
-        </div>
+
       </nav>
     </div>
 
@@ -1569,78 +1684,7 @@ DASHBOARD_HTML = """\
       </div>
     </header>
 
-    <!-- ────────────────── PANEL 1: DASHBOARD ────────────────── -->
-    <div id="panel-dashboard" class="panel active">
-      <div class="stats-grid">
-        <div class="card stat-card glow-hover">
-          <div class="stat-icon"><i data-lucide="activity"></i></div>
-          <div class="stat-info">
-            <span class="stat-label">Total Submissions</span>
-            <span class="stat-value" id="stat-total-jobs">0</span>
-          </div>
-        </div>
-        <div class="card stat-card glow-hover">
-          <div class="stat-icon"><i data-lucide="hourglass"></i></div>
-          <div class="stat-info">
-            <span class="stat-label">Active Tasks</span>
-            <span class="stat-value" id="stat-active-jobs">0</span>
-          </div>
-        </div>
-        <div class="card stat-card glow-hover">
-          <div class="stat-icon"><i data-lucide="check-circle2"></i></div>
-          <div class="stat-info">
-            <span class="stat-label">Successful Jobs</span>
-            <span class="stat-value" id="stat-success-jobs">0</span>
-          </div>
-        </div>
-        <div class="card stat-card glow-hover">
-          <div class="stat-icon"><i data-lucide="zap"></i></div>
-          <div class="stat-info">
-            <span class="stat-label">Success Rate</span>
-            <span class="stat-value" id="stat-success-rate">0%</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="charts-grid">
-        <div class="card">
-          <h3><i data-lucide="trending-up"></i> Job Inference Volume</h3>
-          <div class="chart-container">
-            <canvas id="chart-volume"></canvas>
-          </div>
-        </div>
-        <div class="card">
-          <h3><i data-lucide="pie-chart"></i> Status Distribution</h3>
-          <div class="chart-container">
-            <canvas id="chart-statuses"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3><i data-lucide="align-left"></i> Recent Activity Feed</h3>
-        <div class="jobs-table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Job ID</th>
-                <th>Model</th>
-                <th>Prompt Preview</th>
-                <th>Status</th>
-                <th>Submitted</th>
-              </tr>
-            </thead>
-            <tbody id="dashboard-recent-jobs">
-              <tr>
-                <td colspan="5" style="text-align:center; color:var(--text-muted); padding:32px;">
-                  No jobs logged in this session yet. Submit one!
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <!-- ────────────────── PANEL 1: CHAT (default) ────────────────── -->
 
     <!-- ────────────────── PANEL 3: JOBS HISTORY ────────────────── -->
     <div id="panel-jobs" class="panel">
@@ -1672,16 +1716,17 @@ DASHBOARD_HTML = """\
                 <th>Job ID</th>
                 <th>Model</th>
                 <th>Prompt Context</th>
+                <th>Tokens</th>
                 <th>Status</th>
-                <th>Time Incurred</th>
+                <th>Time</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="jobs-history-list">
               <tr>
-                <td colspan="6" style="text-align:center; color:var(--text-muted); padding:40px;">
-                  No jobs found matching criteria.
-                </td>
+        <td colspan="7" style="text-align:center; color:var(--text-muted); padding:40px;">
+          No jobs found matching criteria.
+        </td>
               </tr>
             </tbody>
           </table>
@@ -1691,170 +1736,120 @@ DASHBOARD_HTML = """\
 
     <!-- ────────────────── PANEL 4: CLUSTER ────────────────── -->
     <div id="panel-cluster" class="panel">
-      <div class="nodes-grid">
-        <!-- Gateway Card -->
-        <div class="node-card">
-          <div class="node-status-glow"></div>
-          <div class="node-header">
-            <div class="node-title-group">
-              <i data-lucide="shield"></i>
-              <div>
-                <div class="node-name">API Gateway</div>
-                <div class="node-role">Central Broker Node</div>
-              </div>
-            </div>
-            <span class="badge-status badge-COMPLETED">ONLINE</span>
+
+      <!-- Cluster Stats Bar -->
+      <div class="cluster-summary">
+        <div class="cluster-stat-item">
+          <i data-lucide="cpu" style="width:18px;height:18px;color:var(--accent)"></i>
+          <div>
+            <span class="cluster-stat-label">Workers</span>
+            <span class="cluster-stat-value" id="cl-summary-workers">0</span>
           </div>
-          <div class="node-info-list">
-            <div class="node-info-item">
-              <span>Host IP</span>
-              <span id="cluster-gw-host">localhost</span>
+        </div>
+        <div class="cluster-stat-item">
+          <i data-lucide="activity" style="width:18px;height:18px;color:var(--success)"></i>
+          <div>
+            <span class="cluster-stat-label">Alive</span>
+            <span class="cluster-stat-value" id="cl-summary-alive">0</span>
+          </div>
+        </div>
+        <div class="cluster-stat-item">
+          <i data-lucide="zap" style="width:18px;height:18px;color:var(--warning)"></i>
+          <div>
+            <span class="cluster-stat-label">Total Tokens</span>
+            <span class="cluster-stat-value" id="cl-summary-tokens">0</span>
+          </div>
+        </div>
+        <div class="cluster-stat-item">
+          <i data-lucide="hard-drive" style="width:18px;height:18px;color:var(--accent)"></i>
+          <div>
+            <span class="cluster-stat-label">Total VRAM</span>
+            <span class="cluster-stat-value" id="cl-summary-vram">—</span>
+          </div>
+        </div>
+        <div class="cluster-stat-item">
+          <i data-lucide="server" style="width:18px;height:18px;color:#a855f7"></i>
+          <div>
+            <span class="cluster-stat-label">Total RAM</span>
+            <span class="cluster-stat-value" id="cl-summary-ram">—</span>
+          </div>
+        </div>
+        <button class="btn" style="margin-left:auto" onclick="location.reload()">
+          <i data-lucide="rotate-cw"></i> Refresh
+        </button>
+      </div>
+
+      <!-- Infrastructure row -->
+      <div class="cluster-infra-row">
+        <div class="infra-card">
+          <div class="infra-card-header">
+            <i data-lucide="shield"></i>
+            <div>
+              <div class="infra-card-name">API Gateway</div>
+              <div class="infra-card-role">Central Broker</div>
             </div>
-            <div class="node-info-item">
-              <span>Service Engine</span>
-              <span>FastAPI (Python)</span>
+          </div>
+          <div class="infra-card-body">
+            <div class="infra-row"><span>Host</span><span id="cluster-gw-host">localhost:3000</span></div>
+            <div class="infra-row"><span>Engine</span><span>FastAPI</span></div>
+            <div class="infra-row"><span>Version</span><span id="cluster-gw-version">1.0.0</span></div>
+          </div>
+        </div>
+        <div class="infra-card">
+          <div class="infra-card-header">
+            <i data-lucide="database"></i>
+            <div>
+              <div class="infra-card-name">Queue Broker</div>
+              <div class="infra-card-role">Redis</div>
             </div>
-            <div class="node-info-item">
-              <span>Platform Version</span>
-              <span id="cluster-gw-version">1.0.0</span>
+          </div>
+          <div class="infra-card-body">
+            <div class="infra-row"><span>Port</span><span>6379</span></div>
+            <div class="infra-row"><span>DB</span><span>0</span></div>
+            <div class="infra-row">
+              <span>Status</span>
+              <span id="cluster-redis-badge" class="badge-status badge-QUEUED" style="font-size:0.7rem;padding:2px 8px">CHECK</span>
             </div>
           </div>
         </div>
-
-        <!-- Redis Broker Card -->
-        <div class="node-card">
-          <div class="node-status-glow"></div>
-          <div class="node-header">
-            <div class="node-title-group">
-              <i data-lucide="database"></i>
-              <div>
-                <div class="node-name">Queue Broker</div>
-                <div class="node-role">Redis Persistence</div>
-              </div>
+        <div class="infra-card">
+          <div class="infra-card-header">
+            <i data-lucide="server"></i>
+            <div>
+              <div class="infra-card-name">Coordinator</div>
+              <div class="infra-card-role">Orchestrator</div>
             </div>
-            <span id="cluster-redis-badge" class="badge-status badge-QUEUED">CHECKING</span>
           </div>
-          <div class="node-info-list">
-            <div class="node-info-item">
-              <span>Broker Engine</span>
-              <span>Valkey / Redis 7+</span>
-            </div>
-            <div class="node-info-item">
-              <span>Socket Port</span>
-              <span>6379</span>
-            </div>
-            <div class="node-info-item">
-              <span>DB Index</span>
-              <span>0</span>
+          <div class="infra-card-body">
+            <div class="infra-row"><span>Status</span><span id="cluster-coord-status">—</span></div>
+            <div class="infra-row"><span>Workers</span><span id="cluster-coord-workers">—</span></div>
+            <div class="infra-row">
+              <span>Health</span>
+              <span id="cluster-coord-badge" class="badge-status badge-QUEUED" style="font-size:0.7rem;padding:2px 8px">WAIT</span>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Cluster Coordinator Card -->
-        <div class="node-card">
-          <div class="node-status-glow"></div>
-          <div class="node-header">
-            <div class="node-title-group">
-              <i data-lucide="server"></i>
-              <div>
-                <div class="node-name">Cluster Coordinator</div>
-                <div class="node-role">Distributed Inference Orchestrator</div>
-              </div>
-            </div>
-            <span id="cluster-coord-badge" class="badge-status badge-QUEUED">IDLE</span>
-          </div>
-          <div class="node-info-list">
-            <div class="node-info-item">
-              <span>Coordinator Status</span>
-              <span id="cluster-coord-status">Click Connect to scan</span>
-            </div>
-            <div class="node-info-item">
-              <span>Cluster Workers</span>
-              <span id="cluster-coord-workers">-</span>
-            </div>
-            <div class="node-info-item">
-              <button id="btn-scan-workers" class="btn btn-primary" style="width:100%;margin-top:8px;justify-content:center" onclick="scanWorkers()">
-                <i data-lucide="search"></i> Connect
-              </button>
-            </div>
-          </div>
+      <!-- Worker Nodes Section -->
+      <div class="cluster-workers-section">
+        <div class="cluster-section-header">
+          <h3><i data-lucide="cpu" style="width:18px;height:18px;color:var(--accent)"></i> Worker Nodes</h3>
+          <span id="cluster-workers-badge" class="badge-status badge-QUEUED" style="font-size:0.75rem">CHECKING</span>
         </div>
-
-        <!-- Active Worker Status Card -->
-        <div class="node-card">
-          <div class="node-status-glow"></div>
-          <div class="node-header">
-            <div class="node-title-group">
-              <i data-lucide="cpu"></i>
-              <div>
-                <div class="node-name">System Workers</div>
-                <div class="node-role">Inference Nodes</div>
-              </div>
-            </div>
-            <span id="cluster-workers-badge" class="badge-status badge-QUEUED">IDLE</span>
-          </div>
-          <div class="node-info-list">
-            <div class="node-info-item">
-              <span>Queue Status</span>
-              <span id="cluster-broker-queue">Checking...</span>
-            </div>
-            <div class="node-info-item">
-              <span>Workers Running</span>
-              <span id="cluster-worker-count">Click Connect to scan</span>
-            </div>
-          </div>
-          <div id="cluster-worker-list" style="margin-top:12px">
-            <div style="color:var(--text-muted);font-size:0.85rem;padding:8px 0">
-              No workers scanned yet. Click Connect above.
-            </div>
+        <div id="cluster-worker-list">
+          <div style="color:var(--text-muted);font-size:0.85rem;padding:24px 0;text-align:center;">
+            Waiting for worker data...
           </div>
         </div>
       </div>
 
     </div>
 
-    <!-- ────────────────── PANEL 5: SETTINGS ────────────────── -->
-    <div id="panel-settings" class="panel">
 
-      <div class="card">
-        <h3 style="margin-bottom:18px;"><i data-lucide="settings"></i> Platform Configuration</h3>
-
-        <div class="settings-notice">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-          <p>
-            Settings are saved in your browser's <code>localStorage</code> and persist across sessions.
-            These values are used by the dashboard when connecting to services.
-          </p>
-        </div>
-
-        <form id="settings-form" onsubmit="saveSettings(event)">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="setting-coordinator-url">Coordinator URL (for cluster mode)</label>
-              <input type="text" id="setting-coordinator-url" placeholder="http://localhost:8050">
-            </div>
-          </div>
-
-          <div style="display:flex; gap:12px; margin-top:8px;">
-            <button type="submit" class="btn btn-primary">
-              <i data-lucide="save"></i> Save Settings
-            </button>
-            <button type="button" class="btn" onclick="resetSettings()">
-              <i data-lucide="rotate-ccw"></i> Reset to Defaults
-            </button>
-          </div>
-        </form>
-
-        <div id="settings-saved-msg" style="display:none; margin-top:16px; padding:10px 14px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:var(--radius-sm); color:var(--success); font-size:0.85rem;">
-          <i data-lucide="check-circle" style="width:14px; height:14px; vertical-align:middle; margin-right:6px;"></i>
-          Settings saved successfully.
-        </div>
-      </div>
-
-    </div>
 
     <!-- ─────────────────── PANEL 6: CHAT ─────────────────── -->
-    <div id="panel-chat" class="panel">
+    <div id="panel-chat" class="panel active">
       <div class="chat-layout">
 
         <!-- Conversation Sidebar -->
@@ -1996,10 +1991,6 @@ DASHBOARD_HTML = """\
     let jobs = {};
     let activeFilter = 'all';
     let pollIntervalId = null;
-    
-    // Chart instances
-    let volumeChart = null;
-    let statusesChart = null;
 
     /* ── Initializer ───────────────────────────────────────────────── */
     window.addEventListener('DOMContentLoaded', () => {
@@ -2018,13 +2009,11 @@ DASHBOARD_HTML = """\
       
       // Start services
       checkClusterHealth();
-
-      // Initial stats & job list render
-      updateDashboardStats();
+      
+      // Initial job list render
       renderJobsHistory();
-      initCharts();
-
-      // Start polling status loop (jobs only — cluster uses manual scan)
+      
+      // Start polling status loop
       startPollingLoop();
     });
 
@@ -2046,12 +2035,7 @@ DASHBOARD_HTML = """\
       const viewTitle = document.getElementById('view-title');
       const viewSubtitle = document.getElementById('view-subtitle');
       
-      if (tabId === 'dashboard') {
-        viewTitle.innerText = "Dashboard";
-        viewSubtitle.innerText = "Real-time distributed system metrics";
-        updateDashboardStats();
-        updateChartsData();
-      } else if (tabId === 'jobs') {
+      if (tabId === 'jobs') {
         viewTitle.innerText = "Jobs History Log";
         viewSubtitle.innerText = "Audit queue contents and completed outputs";
         renderJobsHistory();
@@ -2059,11 +2043,11 @@ DASHBOARD_HTML = """\
         viewTitle.innerText = "Cluster Topology & Status";
         viewSubtitle.innerText = "View connected hardware and network nodes";
         renderClusterTopology();
-      } else if (tabId === 'settings') {
-        viewTitle.innerText = "Platform Settings";
-        viewSubtitle.innerText = "Configure connection URLs and platform preferences";
-        loadSettings();
-      } else if (tabId === 'chat') {
+      } else {
+        // clear cluster poll when leaving cluster tab
+        if (_clusterInterval) { clearInterval(_clusterInterval); _clusterInterval = null; }
+      }
+      if (tabId === 'chat') {
         viewTitle.innerText = "Chat";
         viewSubtitle.innerText = "Converse with any connected model in real-time";
         initChatPanel();
@@ -2171,9 +2155,7 @@ DASHBOARD_HTML = """\
       
       if (changed) {
         persistJobs();
-        updateDashboardStats();
         renderJobsHistory();
-        updateChartsData();
         
         // If drawer inspect is open on this job, update it
         const openDrawerUuid = document.getElementById('drawer-uuid').innerText;
@@ -2211,9 +2193,7 @@ DASHBOARD_HTML = """\
       }
       
       persistJobs();
-      updateDashboardStats();
       renderJobsHistory();
-      updateChartsData();
       showToast(`Synced ${updated} records successfully!`, "success");
     }
 
@@ -2258,7 +2238,7 @@ DASHBOARD_HTML = """\
       items.sort((a, b) => (b.submitted_at || 0) - (a.submitted_at || 0));
 
       if (items.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:40px;">No jobs match criteria.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:40px;">No jobs match criteria.</td></tr>`;
         return;
       }
 
@@ -2266,14 +2246,18 @@ DASHBOARD_HTML = """\
         const idShort = `${job.job_id.slice(0, 8)}...${job.job_id.slice(-4)}`;
         const durationText = getDurationText(job);
         const timeAgoText = getTimeAgo(job.submitted_at);
+        const promptTokens = job.result ? (job.result.prompt_tokens || 0) : 0;
+        const completionTokens = job.result ? (job.result.completion_tokens || 0) : 0;
+        const tokenStr = (promptTokens || completionTokens) ? `${promptTokens}↑ ${completionTokens}↓` : '—';
         
         return `
           <tr onclick="openInspectDrawer('${job.job_id}')">
             <td class="job-id-cell">${idShort}</td>
             <td><code class="node-tag">${esc(job.model_id)}</code></td>
             <td class="prompt-cell">${esc(job.prompt)}</td>
+            <td style="font-family:var(--font-mono);font-size:0.8rem;color:var(--text-secondary);white-space:nowrap;">${tokenStr}</td>
             <td><span class="badge-status badge-${job.status}">${job.status}</span></td>
-            <td>${timeAgoText}</td>
+            <td style="white-space:nowrap;">${timeAgoText}</td>
             <td>
               <div style="display:flex; gap:8px;" onclick="event.stopPropagation()">
                 <button class="btn" style="padding:4px 8px; font-size:0.75rem;" onclick="openInspectDrawer('${job.job_id}')" title="Inspect output text">
@@ -2295,9 +2279,7 @@ DASHBOARD_HTML = """\
       if (jobs[jobId]) {
         delete jobs[jobId];
         persistJobs();
-        updateDashboardStats();
         renderJobsHistory();
-        updateChartsData();
         showToast("Removed job from browser history.", "success");
       }
     }
@@ -2306,50 +2288,12 @@ DASHBOARD_HTML = """\
       if (confirm("Are you sure you want to clear your local history of jobs? This cannot be undone.")) {
         jobs = {};
         persistJobs();
-        updateDashboardStats();
         renderJobsHistory();
-        updateChartsData();
         showToast("History cleared.", "info");
       }
     }
 
-    /* ── Dashboard Stats updates ───────────────────────────────────── */
-    function updateDashboardStats() {
-      const items = Object.values(jobs);
-      const total = items.length;
-      const queued = items.filter(j => j.status === 'QUEUED').length;
-      const processing = items.filter(j => j.status === 'PROCESSING').length;
-      const completed = items.filter(j => j.status === 'COMPLETED').length;
-      const failed = items.filter(j => j.status === 'FAILED').length;
-      
-      document.getElementById('stat-total-jobs').innerText = total;
-      document.getElementById('stat-active-jobs').innerText = queued + processing;
-      document.getElementById('stat-success-jobs').innerText = completed;
-      
-      const successRate = total > 0 ? Math.round((completed / (completed + failed || 1)) * 100) : 0;
-      document.getElementById('stat-success-rate').innerText = total > 0 ? `${successRate}%` : '0%';
-      
-      // Update recent jobs table in dashboard home
-      const recentTbody = document.getElementById('dashboard-recent-jobs');
-      const sorted = [...items].sort((a,b) => (b.submitted_at || 0) - (a.submitted_at || 0)).slice(0, 5);
-      
-      if (sorted.length === 0) {
-        recentTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:32px;">No jobs logged in this session yet. Submit one!</td></tr>`;
-        return;
-      }
-      
-      recentTbody.innerHTML = sorted.map(job => `
-        <tr onclick="openInspectDrawer('${job.job_id}')">
-          <td class="job-id-cell">${job.job_id.slice(0,8)}...</td>
-          <td><code class="node-tag">${esc(job.model_id)}</code></td>
-          <td class="prompt-cell">${esc(job.prompt)}</td>
-          <td><span class="badge-status badge-${job.status}">${job.status}</span></td>
-          <td>${getTimeAgo(job.submitted_at)}</td>
-        </tr>
-      `).join('');
-      
-      lucide.createIcons();
-    }
+
 
     /* ── Slide Inspect Drawer Manager ────────────────────────────── */
     function openInspectDrawer(jobId) {
@@ -2436,78 +2380,116 @@ DASHBOARD_HTML = """\
     }
 
     /* ── Cluster Topology Renderer ────────────────────────────────── */
+    let _clusterInterval = null;
+
     async function renderClusterTopology() {
       checkClusterHealth();
-      // Don't auto-scan workers — user must click "Connect" button
-      // to manually trigger a worker scan
+      await fetchWorkerResources();
+      if (!_clusterInterval) {
+        _clusterInterval = setInterval(fetchWorkerResources, 5000);
+      }
     }
 
-    async function scanWorkers() {
-      const btn = document.getElementById('btn-scan-workers');
-      const workerCount = document.getElementById('cluster-coord-workers');
-      const workerList = document.getElementById('cluster-worker-list');
-      const badge = document.getElementById('cluster-coord-badge');
+    function fmtMB(mb) {
+      if (!mb || mb <= 0) return '—';
+      if (mb >= 1024) return (mb / 1024).toFixed(1) + ' GB';
+      return mb + ' MB';
+    }
 
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Scanning...';
-      }
-      if (badge) {
-        badge.className = 'badge-status badge-QUEUED';
-        badge.innerText = 'SCANNING';
-      }
+    async function fetchWorkerResources() {
+      const badge = document.getElementById('cluster-coord-badge');
+      const coordStatus = document.getElementById('cluster-coord-status');
+      const coordWorkers = document.getElementById('cluster-coord-workers');
+      const workersBadge = document.getElementById('cluster-workers-badge');
+      const workerList = document.getElementById('cluster-worker-list');
 
       try {
-        const resp = await fetch(API + '/cluster/workers');
-        if (resp.ok) {
-          const data = await resp.json();
-          const alive = data.alive_workers || 0;
-          const total = data.total_workers || 0;
-          const workers = data.workers || [];
+        const resp = await fetch(API + '/cluster/status');
+        if (!resp.ok) throw new Error('Coordinator unreachable');
+        const data = await resp.json();
 
-          if (workerCount) {
-            workerCount.innerText = `${alive} alive / ${total} total`;
-          }
-          if (badge) {
-            badge.className = alive > 0 ? 'badge-status badge-COMPLETED' : 'badge-status badge-QUEUED';
-            badge.innerText = alive > 0 ? 'ONLINE' : 'NO WORKERS';
-          }
+        const alive = data.alive_workers || 0;
+        const total = data.total_workers || 0;
+        const workers = data.workers || [];
 
-          // Render worker list
-          if (workerList) {
-            if (workers.length === 0) {
-              workerList.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;padding:8px 0">No workers found. Start a worker on another machine and click Connect.</div>';
-            } else {
-              workerList.innerHTML = workers.map(w => `
-                <div class="worker-item">
-                  <div class="worker-dot ${w.status === 'alive' ? 'alive' : 'stale'}"></div>
-                  <div class="worker-info">
-                    <div class="worker-host">${w.host || w.id}</div>
-                    <div class="worker-model">${w.model || 'unknown model'} · ${w.status}</div>
+        // Update summary bar
+        document.getElementById('cl-summary-workers').innerText = total;
+        document.getElementById('cl-summary-alive').innerText = alive;
+        const totalVram = workers.reduce((s, w) => s + (w.vram_mb || 0), 0);
+        const totalRam = workers.reduce((s, w) => s + (w.ram_mb || 0), 0);
+        const totalTokens = workers.reduce((s, w) => s + (w.tokens_processed || 0), 0);
+        document.getElementById('cl-summary-tokens').innerText = totalTokens;
+        document.getElementById('cl-summary-vram').innerText = fmtMB(totalVram);
+        document.getElementById('cl-summary-ram').innerText = fmtMB(totalRam);
+
+        if (badge) {
+          badge.className = alive > 0 ? 'badge-status badge-COMPLETED' : 'badge-status badge-QUEUED';
+          badge.innerText = alive > 0 ? 'ONLINE' : 'NO WORKERS';
+        }
+        if (coordStatus) {
+          coordStatus.innerText = alive > 0 ? 'Active' : 'Idle';
+        }
+        if (coordWorkers) {
+          coordWorkers.innerText = total > 0 ? `${alive} alive / ${total} total` : '—';
+        }
+
+        if (workersBadge) {
+          workersBadge.className = alive > 0 ? 'badge-status badge-COMPLETED' : 'badge-status badge-QUEUED';
+          workersBadge.innerText = alive > 0 ? `${alive} ACTIVE` : 'IDLE';
+        }
+
+        if (workerList) {
+          if (workers.length === 0) {
+            workerList.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;padding:24px 0;text-align:center;">No workers connected. Start a worker with:<br><code style="background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px;font-size:0.78rem;margin-top:6px;display:inline-block;">bash start.sh --worker &lt;head-ip&gt;</code></div>';
+          } else {
+            workerList.innerHTML = workers.map(w => {
+              const isAlive = w.alive;
+              const vramStr = fmtMB(w.vram_mb);
+              const ramStr = fmtMB(w.ram_mb);
+              const tokens = w.tokens_processed || 0;
+              const statusLabel = isAlive ? 'alive' : 'dead';
+              const name = esc(w.label || w.host || w.worker_id);
+              const host = esc(w.host || '—');
+              return `
+                <div class="wr-card">
+                  <span class="wr-status-dot ${statusLabel}"></span>
+                  <div class="wr-icon"><i data-lucide="cpu"></i></div>
+                  <div class="wr-body">
+                    <div class="wr-name">${name}</div>
+                    <div class="wr-host">${host}</div>
+                  </div>
+                  <div class="wr-resources">
+                    <div class="wr-res-item">
+                      <span class="wr-res-value">${vramStr}</span>
+                      <span class="wr-res-label">VRAM</span>
+                    </div>
+                    <div class="wr-res-item">
+                      <span class="wr-res-value">${ramStr}</span>
+                      <span class="wr-res-label">RAM</span>
+                    </div>
+                  </div>
+                  <div class="wr-tokens">
+                    <span class="wr-tokens-value">${tokens}</span>
+                    <span class="wr-tokens-label">tokens</span>
                   </div>
                 </div>
-              `).join('');
-            }
-          }
-        } else {
-          if (badge) {
-            badge.className = 'badge-status badge-FAILED';
-            badge.innerText = 'ERROR';
+              `;
+            }).join('');
+            lucide.createIcons();
           }
         }
       } catch (e) {
         if (badge) {
           badge.className = 'badge-status badge-FAILED';
-          badge.innerText = 'UNREACHABLE';
+          badge.innerText = 'OFFLINE';
+        }
+        if (coordStatus) coordStatus.innerText = 'Coordinator Down';
+        if (workersBadge) {
+          workersBadge.className = 'badge-status badge-FAILED';
+          workersBadge.innerText = 'OFFLINE';
         }
         if (workerList) {
-          workerList.innerHTML = '<div style="color:var(--danger);font-size:0.85rem">Failed to scan workers. Check API connectivity.</div>';
-        }
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = '<i data-lucide="search"></i> Connect';
-          lucide.createIcons();
+          workerList.innerHTML = '<div style="color:var(--danger);font-size:0.85rem;padding:16px 0;text-align:center;">Coordinator unreachable. Ensure the cluster coordinator is running on port 8050.</div>';
         }
       }
     }
@@ -2564,126 +2546,25 @@ DASHBOARD_HTML = """\
       }
     }
 
-    // updateCoordinatorStatus removed — replaced by scanWorkers() triggered manually
-
     function setHealthStatusFailed() {
       const gwDot = document.getElementById('gateway-status-dot');
       const gwText = document.getElementById('gateway-status-text');
-      
+      if (gwDot) { gwDot.className = 'status-dot inactive'; }
+      if (gwText) { gwText.innerText = 'Offline'; }
+
       const redisDot = document.getElementById('redis-status-dot');
       const redisText = document.getElementById('redis-status-text');
-      
-      gwDot.className = 'status-dot inactive';
-      gwText.innerText = 'Offline';
-      
-      redisDot.className = 'status-dot inactive';
-      redisText.innerText = 'Offline';
+      if (redisDot) { redisDot.className = 'status-dot inactive'; }
+      if (redisText) { redisText.innerText = 'Offline'; }
       
       const clusterRedisBadge = document.getElementById('cluster-redis-badge');
       if (clusterRedisBadge) {
         clusterRedisBadge.className = 'badge-status badge-FAILED';
         clusterRedisBadge.innerText = 'OFFLINE';
-        document.getElementById('cluster-broker-queue').innerText = 'System Connection Error';
       }
     }
 
-    /* ── Charts.js Visualization ───────────────────────────────────── */
-    function initCharts() {
-      // 1. Line Chart Volume
-      const ctxVolume = document.getElementById('chart-volume').getContext('2d');
-      volumeChart = new Chart(ctxVolume, {
-        type: 'line',
-        data: {
-          labels: ['1h ago', '45m ago', '30m ago', '15m ago', 'Now'],
-          datasets: [{
-            label: 'Inference Jobs',
-            data: [0, 0, 0, 0, 0],
-            borderColor: '#6366f1',
-            backgroundColor: 'rgba(99, 102, 241, 0.1)',
-            fill: true,
-            tension: 0.4,
-            borderWidth: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: {
-              grid: { color: 'rgba(255, 255, 255, 0.05)' },
-              ticks: { color: '#94a3b8', stepSize: 1 },
-              beginAtZero: true
-            },
-            x: {
-              grid: { display: false },
-              ticks: { color: '#94a3b8' }
-            }
-          }
-        }
-      });
 
-      // 2. Pie Chart Statuses
-      const ctxStatuses = document.getElementById('chart-statuses').getContext('2d');
-      statusesChart = new Chart(ctxStatuses, {
-        type: 'doughnut',
-        data: {
-          labels: ['Completed', 'Failed', 'Running', 'Queued'],
-          datasets: [{
-            data: [0, 0, 0, 0],
-            backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#6366f1'],
-            borderWidth: 1,
-            borderColor: 'rgba(6, 6, 9, 0.8)'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'right',
-              labels: { color: '#f8fafc', font: { family: 'Inter', size: 11 } }
-            }
-          },
-          cutout: '65%'
-        }
-      });
-      
-      updateChartsData();
-    }
-
-    function updateChartsData() {
-      if (!volumeChart || !statusesChart) return;
-      
-      const items = Object.values(jobs);
-      
-      // Update doughnut data
-      const completed = items.filter(j => j.status === 'COMPLETED').length;
-      const failed = items.filter(j => j.status === 'FAILED').length;
-      const processing = items.filter(j => j.status === 'PROCESSING').length;
-      const queued = items.filter(j => j.status === 'QUEUED').length;
-      
-      statusesChart.data.datasets[0].data = [completed, failed, processing, queued];
-      statusesChart.update();
-
-      // Update line chart with some dynamic mock timestamps based on local submissions
-      // In a real application, this maps server history. We construct a 5-bucket volume count.
-      const nowMs = Date.now();
-      const buckets = [0, 0, 0, 0, 0]; // representing 1h, 45m, 30m, 15m, current
-      
-      items.forEach(j => {
-        if (!j.submitted_at) return;
-        const diffMins = (nowMs / 1000 - j.submitted_at) / 60;
-        if (diffMins <= 15) buckets[4]++;
-        else if (diffMins <= 30) buckets[3]++;
-        else if (diffMins <= 45) buckets[2]++;
-        else if (diffMins <= 60) buckets[1]++;
-        else buckets[0]++;
-      });
-      
-      volumeChart.data.datasets[0].data = buckets;
-      volumeChart.update();
-    }
 
     /* ── Chat Logic ─────────────────────────────────────────────────── */
     let chatHistory = [];
@@ -3028,32 +2909,7 @@ DASHBOARD_HTML = """\
       newConversation();
     }
 
-    /* ── Settings Logic ────────────────────────────────────────────── */
-    const COORD_KEY = 'younify_coordinator_url';
-    const COORD_DEFAULT = 'http://localhost:8050';
 
-    function loadSettings() {
-      const el = document.getElementById('setting-coordinator-url');
-      if (el) el.value = localStorage.getItem(COORD_KEY) || COORD_DEFAULT;
-      document.getElementById('settings-saved-msg').style.display = 'none';
-    }
-
-    function saveSettings(event) {
-      event.preventDefault();
-      const el = document.getElementById('setting-coordinator-url');
-      if (el) localStorage.setItem(COORD_KEY, el.value.trim() || COORD_DEFAULT);
-      const msg = document.getElementById('settings-saved-msg');
-      msg.style.display = 'block';
-      setTimeout(() => { msg.style.display = 'none'; }, 3000);
-      showToast('Settings saved.', 'success');
-    }
-
-    function resetSettings() {
-      localStorage.removeItem(COORD_KEY);
-      const el = document.getElementById('setting-coordinator-url');
-      if (el) el.value = COORD_DEFAULT;
-      showToast('Settings reset to defaults.', 'info');
-    }
 
     /* ── Utilities ────────────────────────────────────────────────── */
     function esc(str) {

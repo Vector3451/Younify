@@ -167,7 +167,6 @@ class ClusterWorker:
             print(f"  [rpc] {text}")
 
     def _heartbeat_loop(self):
-        resource_timer = 0
         while self._running:
             try:
                 resp = requests.post(
@@ -186,12 +185,9 @@ class ClusterWorker:
             except requests.RequestException:
                 pass
 
-            resource_timer += HEARTBEAT_INTERVAL
-            if resource_timer >= 10:
-                resource_timer = 0
-                log_resource_usage()
-                status = "busy" if self._total_tokens > 0 else "idle"
-                print(f"[CLUSTER] Status: {status} | Total tokens contributed: {self._total_tokens}")
+            log_resource_usage()
+            status = "busy" if self._total_tokens > 0 else "idle"
+            print(f"[CLUSTER] Status: {status} | Total tokens contributed: {self._total_tokens}")
 
             time.sleep(HEARTBEAT_INTERVAL)
 
