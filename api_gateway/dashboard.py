@@ -2009,12 +2009,16 @@ DASHBOARD_HTML = """\
       
       // Start services
       checkClusterHealth();
+      setInterval(checkClusterHealth, 10000);
       
       // Initial job list render
       renderJobsHistory();
       
       // Start polling status loop
       startPollingLoop();
+
+      // Initialize chat panel (it's the default active tab)
+      initChatPanel();
     });
 
     /* ── Tab Navigation ────────────────────────────────────────────── */
@@ -2381,12 +2385,16 @@ DASHBOARD_HTML = """\
 
     /* ── Cluster Topology Renderer ────────────────────────────────── */
     let _clusterInterval = null;
+    let _healthInterval = null;
 
     async function renderClusterTopology() {
       checkClusterHealth();
       await fetchWorkerResources();
       if (!_clusterInterval) {
         _clusterInterval = setInterval(fetchWorkerResources, 5000);
+      }
+      if (!_healthInterval) {
+        _healthInterval = setInterval(checkClusterHealth, 10000);
       }
     }
 
@@ -2505,10 +2513,13 @@ DASHBOARD_HTML = """\
       const clusterQueueSize = document.getElementById('cluster-broker-queue');
 
       try {
+        console.log('[Health] Fetching', API + '/health');
         const response = await fetch(API + '/health');
+        console.log('[Health] Response status:', response.status);
         
         if (response.ok) {
           const data = await response.json();
+          console.log('[Health] Data:', JSON.stringify(data));
           
           gwDot.className = 'status-dot active';
           gwText.innerText = 'Connected';
@@ -2523,8 +2534,11 @@ DASHBOARD_HTML = """\
             }
             
             // Check queue sizes
-            clusterQueueSize.innerHTML = `<span style="color:var(--success); font-weight:600">Active Listener (FIFO)</span>`;
+            if (clusterQueueSize) {
+              clusterQueueSize.innerHTML = `<span style="color:var(--success); font-weight:600">Active Listener (FIFO)</span>`;
+            }
           } else {
+            console.log('[Health] redis_connected is FALSE');
             redisDot.className = 'status-dot inactive';
             redisText.innerText = 'Offline';
             
@@ -2532,16 +2546,18 @@ DASHBOARD_HTML = """\
               clusterRedisBadge.className = 'badge-status badge-FAILED';
               clusterRedisBadge.innerText = 'OFFLINE';
             }
-            clusterQueueSize.innerText = 'Redis Unreachable';
+            if (clusterQueueSize) clusterQueueSize.innerText = 'Redis Unreachable';
           }
           
           if (document.getElementById('cluster-gw-version')) {
             document.getElementById('cluster-gw-version').innerText = data.version || '1.0.0';
           }
         } else {
+          console.log('[Health] Response not OK, status:', response.status);
           setHealthStatusFailed();
         }
       } catch (e) {
+        console.log('[Health] Fetch error:', e.message);
         setHealthStatusFailed();
       }
     }
@@ -2705,18 +2721,25 @@ DASHBOARD_HTML = """\
       sel.innerHTML = '<option value="">Loading…</option>';
       try {
         const resp = await fetch(API + '/models');
-        if (!resp.ok) throw new Error();
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
         const models = data[provider] || [];
+        const status = data.status || 'ok';
         if (models.length === 0) {
-          sel.innerHTML = `<option value="">— no models for ${provider} —</option>`;
+          if (status !== 'ok' && !status.startsWith('ollama returned')) {
+            sel.innerHTML = `<option value="">⚠ ${esc(status)}</option>`;
+            showToast('Ollama: ' + status, 'error');
+          } else {
+            sel.innerHTML = `<option value="">— no models for ${provider} —</option>`;
+          }
         } else {
           sel.innerHTML = models.map(m =>
             `<option value="${provider}/${esc(m)}">${esc(m)}</option>`
           ).join('');
         }
-      } catch {
+      } catch (err) {
         sel.innerHTML = '<option value="">— failed to load —</option>';
+        showToast('Failed to fetch models: ' + err.message, 'error');
       }
     }
 
@@ -2889,17 +2912,32 @@ DASHBOARD_HTML = """\
       }
     }
 
-    async function pollChatJob(jobId, maxWaitMs = 120000, intervalMs = 1500) {
+    async function pollChatJob(jobId, maxWaitMs = 600000, intervalMs = 1500) {
       const deadline = Date.now() + maxWaitMs;
-      while (Date.now() < deadline) {
-        await new Promise(r => setTimeout(r, intervalMs));
-        const resp = await fetch(`${API}/status/${jobId}`);
-        if (!resp.ok) throw new Error('Status check failed');
-        const data = await resp.json();
-        if (data.status === 'COMPLETED') return data;
-        if (data.status === 'FAILED') throw new Error(data.error || 'Job failed on worker');
+      const startTime = Date.now();
+      // Update the last assistant bubble to show elapsed time
+      const typingEl = document.getElementById('chat-typing');
+      const elapsedInterval = setInterval(() => {
+        const el = document.getElementById('chat-typing');
+        if (!el) { clearInterval(elapsedInterval); return; }
+        const secs = Math.floor((Date.now() - startTime) / 1000);
+        const min = Math.floor(secs / 60);
+        const label = min > 0 ? `${min}m ${secs % 60}s` : `${secs}s`;
+        el.querySelector('.typing-indicator').title = `Generating for ${label}`;
+      }, 1000);
+      try {
+        while (Date.now() < deadline) {
+          await new Promise(r => setTimeout(r, intervalMs));
+          const resp = await fetch(`${API}/status/${jobId}`);
+          if (!resp.ok) throw new Error('Status check failed');
+          const data = await resp.json();
+          if (data.status === 'COMPLETED') return data;
+          if (data.status === 'FAILED') throw new Error(data.error || 'Job failed on worker');
+        }
+        throw new Error('Timed out waiting for model response');
+      } finally {
+        clearInterval(elapsedInterval);
       }
-      throw new Error('Timed out waiting for model response');
     }
 
     function clearChat() {

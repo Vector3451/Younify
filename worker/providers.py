@@ -36,6 +36,11 @@ class BaseProvider(ABC):
     ) -> dict:
         ...
 
+    def warmup(self, model: str) -> bool:
+        """Preload model into VRAM so first real request is fast.
+        Returns True if warmup succeeded."""
+        return False
+
     def _default_result(self, model: str, completion: str) -> dict:
         return {
             "model": model,
@@ -50,20 +55,77 @@ class OllamaProvider(BaseProvider):
 
     def __init__(self, base_url: str = None):
         self.base_url = (base_url or os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")).rstrip("/")
+        self._vram_mb = self._detect_vram()
+        # OLLAMA_NUM_GPU environment variable:
+        #   -1 = auto (default) — Ollama offloads as many layers as VRAM allows
+        #    0 = CPU only
+        #    N = put N layers on GPU
+        raw = os.environ.get("OLLAMA_NUM_GPU", "-1")
+        try:
+            self.num_gpu = int(raw) if raw.strip() else -1
+        except ValueError:
+            print(f"[OLLAMA] Invalid OLLAMA_NUM_GPU={raw!r}, defaulting to -1 (auto)")
+            self.num_gpu = -1
+        # Keep model warm in VRAM between requests (default 1 hour, set to -1 for indefinite)
+        self.keep_alive = os.environ.get("OLLAMA_KEEP_ALIVE", "3600s")
+        if self._vram_mb:
+            print(f"[OLLAMA] Detected {self._vram_mb} MB free VRAM, num_gpu={self.num_gpu}")
+
+    @staticmethod
+    def _detect_vram() -> int:
+        try:
+            import subprocess
+            result = subprocess.run(
+                ["nvidia-smi", "--query-gpu=memory.free", "--format=csv,noheader,nounits"],
+                capture_output=True, text=True, timeout=5,
+            )
+            if result.returncode == 0:
+                vrams = [int(x.strip()) for x in result.stdout.strip().split("\n") if x.strip()]
+                return sum(vrams)
+        except Exception:
+            pass
+        return 0
+
+    def warmup(self, model: str) -> bool:
+        """Preload model into VRAM by sending a trivial prompt."""
+        try:
+            url = f"{self.base_url}/api/generate"
+            payload = {
+                "model": model,
+                "prompt": "hello",
+                "stream": False,
+                "keep_alive": self.keep_alive,
+                "options": {"num_predict": 1},
+            }
+            resp = requests.post(url, json=payload, timeout=120)
+            resp.raise_for_status()
+            print(f"[OLLAMA] Model '{model}' warmed up and kept alive ({self.keep_alive})")
+            return True
+        except Exception as e:
+            print(f"[OLLAMA] Warmup failed for '{model}': {e}")
+            return False
 
     def generate(self, model: str, prompt: str, max_tokens: int = 2048, temperature: float = 0.7, **kwargs) -> dict:
         url = f"{self.base_url}/api/generate"
+
+        options = {
+            "num_predict": max_tokens,
+            "temperature": temperature,
+        }
+
+        num_gpu = kwargs.get("num_gpu", self.num_gpu)
+        if num_gpu >= 0:
+            options["num_gpu"] = num_gpu
+
         payload = {
             "model": model,
             "prompt": prompt,
             "stream": False,
-            "options": {
-                "num_predict": max_tokens,
-                "temperature": temperature,
-            },
+            "keep_alive": self.keep_alive,
+            "options": options,
         }
 
-        resp = requests.post(url, json=payload, timeout=300)
+        resp = requests.post(url, json=payload, timeout=600)
         resp.raise_for_status()
         data = resp.json()
 

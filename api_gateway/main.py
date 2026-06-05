@@ -30,15 +30,32 @@ from .dashboard import DASHBOARD_HTML
 REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
 REDIS_DB = int(os.environ.get("REDIS_DB", 0))
-TASK_QUEUE = "inference_tasks"
 RESULT_PREFIX = "inference_result:"
 
+# Priority queues matching worker/worker.py
+QUEUE_HIGH = "inference_tasks:high"
+QUEUE_DEFAULT = "inference_tasks:default"
+QUEUE_LOW = "inference_tasks:low"
+
+
+_redis_pool = None
 
 def get_redis():
-    """Create a fresh Redis connection."""
-    return redis.Redis(
-        host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, decode_responses=True
-    )
+    """Return a shared Redis client with connection pooling."""
+    global _redis_pool
+    if _redis_pool is None:
+        _redis_pool = redis.ConnectionPool(
+            host=REDIS_HOST,
+            port=REDIS_PORT,
+            db=REDIS_DB,
+            decode_responses=True,
+            socket_keepalive=True,
+            socket_connect_timeout=5,
+            retry_on_timeout=True,
+            health_check_interval=30,
+            max_connections=20,
+        )
+    return redis.Redis(connection_pool=_redis_pool)
 
 
 # ---------------------------------------------------------------------------
@@ -85,6 +102,11 @@ class PromptRequest(BaseModel):
         'Example: "ollama/llama3:7b".',
     )
     api_key: Optional[str] = Field(None, description="Deprecated — Younify uses Ollama for inference.")
+    priority: str = Field(
+        "default",
+        description='Task priority: "high", "default", or "low". '
+        'High-priority tasks are processed before default and low.',
+    )
 
 
 class JobAcceptedResponse(BaseModel):
@@ -153,10 +175,21 @@ async def list_models():
         resp = req.get(f"{base_url}/api/tags", timeout=5)
         if resp.status_code == 200:
             models = resp.json().get("models", [])
-            return {"ollama": [m["name"] for m in models]}
-    except Exception:
-        pass
-    return {"ollama": []}
+            return {
+                "ollama": [m["name"] for m in models],
+                "status": "ok",
+                "count": len(models),
+            }
+        return {"ollama": [], "status": f"ollama returned {resp.status_code}", "count": 0}
+    except req.ConnectionError as e:
+        return {
+            "ollama": [],
+            "status": f"Ollama unreachable ({base_url}): {e}",
+            "count": 0,
+            "fix": "Run 'ollama serve' to start Ollama",
+        }
+    except Exception as e:
+        return {"ollama": [], "status": f"error: {e}", "count": 0}
 
 
 @app.post(
@@ -174,6 +207,14 @@ async def submit_job(request: PromptRequest):
     client = get_redis()
 
     job_id = str(uuid.uuid4())
+
+    # Validate priority
+    priority = request.priority.lower()
+    if priority not in ("high", "default", "low"):
+        priority = "default"
+    queue_map = {"high": QUEUE_HIGH, "default": QUEUE_DEFAULT, "low": QUEUE_LOW}
+    target_queue = queue_map[priority]
+
     task_payload = {
         "job_id": job_id,
         "prompt": request.prompt,
@@ -181,11 +222,12 @@ async def submit_job(request: PromptRequest):
         "temperature": request.temperature,
         "model_id": request.model_id,
         "api_key": request.api_key,
+        "priority": priority,
         "submitted_at": time.time(),
     }
 
     try:
-        client.lpush(TASK_QUEUE, json.dumps(task_payload))
+        client.lpush(target_queue, json.dumps(task_payload))
     except RedisConnectionError:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -374,8 +416,12 @@ async def openai_chat_completions(req: ChatCompletionRequest):
                 status_code=status.HTTP_504_GATEWAY_TIMEOUT,
                 detail="Coordinator inference timed out",
             )
+        except req_lib.HTTPError:
+            # Coordinator returned an error (e.g. 503 from missing llama-server)
+            # — fall through to Ollama
+            pass
         except req_lib.RequestException as e:
-            # Don't fall through on non-connection errors — surface to caller
+            # Genuine request error (e.g. invalid URL) — surface to caller
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
                 detail=f"Coordinator inference failed: {e}",
@@ -393,7 +439,7 @@ async def openai_chat_completions(req: ChatCompletionRequest):
                 "temperature": req.temperature,
                 "stream": False,
             },
-            timeout=300,
+            timeout=600,
         )
         resp.raise_for_status()
         data = resp.json()

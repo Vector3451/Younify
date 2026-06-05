@@ -116,6 +116,29 @@ class ClusterWorker:
         self._running = False
         self._total_tokens = 0
 
+    @staticmethod
+    def _get_gpu_info() -> tuple:
+        """Detect GPU name and compute capability."""
+        gpu_name = ""
+        gpu_compute_cap = ""
+        try:
+            import subprocess
+            result = subprocess.run(
+                ["nvidia-smi", "--query-gpu=name,compute_cap", "--format=csv,noheader"],
+                capture_output=True, text=True, timeout=5,
+            )
+            if result.returncode == 0:
+                lines = result.stdout.strip().split("\n")
+                for line in lines:
+                    parts = [p.strip() for p in line.split(",") if p.strip()]
+                    if len(parts) >= 1:
+                        gpu_name = parts[0]
+                    if len(parts) >= 2:
+                        gpu_compute_cap = parts[1]
+        except Exception:
+            pass
+        return gpu_name, gpu_compute_cap
+
     def start(self):
         hostname = socket.gethostname()
 
@@ -132,6 +155,7 @@ class ClusterWorker:
             print(f"[CLUSTER] Run it manually on port {self.rpc_port}")
 
         vram_mb, ram_mb = get_system_memory()
+        gpu_name, gpu_compute_cap = self._get_gpu_info()
 
         try:
             resp = requests.post(
@@ -142,6 +166,8 @@ class ClusterWorker:
                     "vram_mb": vram_mb,
                     "ram_mb": ram_mb,
                     "label": self.label or f"worker-{hostname}",
+                    "gpu_name": gpu_name,
+                    "gpu_compute_cap": gpu_compute_cap,
                 },
                 timeout=10,
             )
@@ -149,6 +175,8 @@ class ClusterWorker:
             self.worker_id = data["worker_id"]
             print(f"[CLUSTER] Registered. ID: {self.worker_id}")
             print(f"[CLUSTER] VRAM: {vram_mb} MB, RAM: {ram_mb} MB")
+            if gpu_name:
+                print(f"[CLUSTER] GPU: {gpu_name} (compute {gpu_compute_cap or 'N/A'})")
         except requests.RequestException as e:
             print(f"[CLUSTER] Registration failed: {e}")
             return
@@ -166,12 +194,41 @@ class ClusterWorker:
             text = line.decode(errors="replace").rstrip()
             print(f"  [rpc] {text}")
 
+    def _get_realtime_metrics(self) -> dict:
+        """Collect real-time CPU, RAM, GPU utilization metrics."""
+        metrics = {"cpu_percent": 0, "gpu_util": 0, "vram_free_mb": 0, "ram_available_mb": 0, "ram_percent": 0}
+        try:
+            import psutil
+            metrics["cpu_percent"] = psutil.cpu_percent(interval=0.3)
+            mem = psutil.virtual_memory()
+            metrics["ram_available_mb"] = mem.available // (1024 * 1024)
+            metrics["ram_percent"] = mem.percent
+        except ImportError:
+            pass
+        try:
+            import subprocess
+            result = subprocess.run(
+                ["nvidia-smi", "--query-gpu=memory.free,utilization.gpu", "--format=csv,noheader,nounits"],
+                capture_output=True, text=True, timeout=3,
+            )
+            if result.returncode == 0:
+                lines = result.stdout.strip().split("\n")
+                for line in lines:
+                    parts = [p.strip() for p in line.split(",") if p.strip()]
+                    if len(parts) >= 2:
+                        metrics["vram_free_mb"] += int(parts[0])
+                        metrics["gpu_util"] = max(metrics["gpu_util"], float(parts[1]))
+        except Exception:
+            pass
+        return metrics
+
     def _heartbeat_loop(self):
         while self._running:
             try:
+                metrics = self._get_realtime_metrics()
                 resp = requests.post(
                     f"{self.coordinator_url}/api/v1/workers/heartbeat",
-                    json={"worker_id": self.worker_id},
+                    json={"worker_id": self.worker_id, **metrics},
                     timeout=5,
                 )
                 if resp.ok:
